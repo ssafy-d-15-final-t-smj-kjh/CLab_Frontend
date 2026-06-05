@@ -1,0 +1,23 @@
+:root {
+    --sand-light: #fdf6e8;
+    --sand: #f7e9c9;
+    --sand-dark: #f0d9a8;
+    --sky-blue: #a8dadc;
+    --ocean-blue: #5bb4c4;
+    --crab-red: #c41e3a;
+    --crab-orange: #e8554e;
+    --text-dark: #3a3a3a;
+    --text-gray: #888;
+    --white: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+}
+
+body {
+    background: var(--sand-light);
+}
