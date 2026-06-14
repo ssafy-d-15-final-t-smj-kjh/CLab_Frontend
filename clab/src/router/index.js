@@ -40,7 +40,7 @@ const routes = [
   component: LoginPage,
 },
 {
-  path: '/myinfo',
+  path: '/my-info',
   name: 'MyInfo',
   component: MyInfoPage,
 },

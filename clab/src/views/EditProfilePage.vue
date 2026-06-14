@@ -2,7 +2,7 @@
     <div class="edit-profile-page">
         <!-- Header -->
         <header class="page-header">
-            <button class="back-btn" @click="router.push('/myinfo')">
+            <button class="back-btn" @click="router.push('/my-info')">
                 <span class="back-icon">←</span>
             </button>
             <h1 class="page-title">내 정보 수정</h1>
@@ -55,8 +55,8 @@
                         <input id="username" v-model="usernameForm.username" type="text" class="form-input"
                             placeholder="새 사용자 이름을 입력하세요" :class="{ 'input-error': usernameErrors.username }" />
                     </div>
-                    <p v-if="usernameErrors.username" class="error-text">
-                        {{ usernameErrors.username }}
+                    <p v-if="usernameErrors.error" class="error-text">
+                        {{ usernameErrors.error }}
                     </p>
                 </div>
                 <div class="card-footer">
@@ -81,10 +81,10 @@
                     <div class="input-wrapper">
                         <span class="input-icon">🔒</span>
                         <input id="currentPassword" v-model="passwordForm.currentPassword"
-                            :type="showCurrent ? 'text' : 'password'" class="form-input" placeholder="현재 비밀번호를 입력하세요"
+                            :type="showCurrentPassword ? 'text' : 'password'" class="form-input" placeholder="현재 비밀번호를 입력하세요"
                             :class="{ 'input-error': passwordErrors.currentPassword }" />
-                        <button type="button" class="toggle-password" @click="showCurrent = !showCurrent">
-                            {{ showCurrent ? '🙈' : '👁️' }}
+                        <button type="button" class="toggle-password" @click="showCurrentPassword = !showCurrentPassword">
+                            {{ showCurrentPassword ? '🙈' : '👁️' }}
                         </button>
                     </div>
                     <p v-if="passwordErrors.currentPassword" class="error-text">
@@ -97,11 +97,11 @@
                     <label class="form-label" for="newPassword">새 비밀번호</label>
                     <div class="input-wrapper">
                         <span class="input-icon">🔑</span>
-                        <input id="newPassword" v-model="passwordForm.newPassword" :type="showNew ? 'text' : 'password'"
+                        <input id="newPassword" v-model="passwordForm.newPassword" :type="showNewPassword ? 'text' : 'password'"
                             class="form-input" placeholder="새 비밀번호를 입력하세요 (6자 이상)"
                             :class="{ 'input-error': passwordErrors.newPassword }" />
-                        <button type="button" class="toggle-password" @click="showNew = !showNew">
-                            {{ showNew ? '🙈' : '👁️' }}
+                        <button type="button" class="toggle-password" @click="showNewPassword = !showNewPassword">
+                            {{ showNewPassword ? '🙈' : '👁️' }}
                         </button>
                     </div>
                     <p v-if="passwordErrors.newPassword" class="error-text">
@@ -115,10 +115,10 @@
                     <div class="input-wrapper">
                         <span class="input-icon">🔑</span>
                         <input id="confirmPassword" v-model="passwordForm.confirmPassword"
-                            :type="showConfirm ? 'text' : 'password'" class="form-input" placeholder="새 비밀번호를 다시 입력하세요"
+                            :type="showConfirmPassword ? 'text' : 'password'" class="form-input" placeholder="새 비밀번호를 다시 입력하세요"
                             :class="{ 'input-error': passwordErrors.confirmPassword }" />
-                        <button type="button" class="toggle-password" @click="showConfirm = !showConfirm">
-                            {{ showConfirm ? '🙈' : '👁️' }}
+                        <button type="button" class="toggle-password" @click="showConfirmPassword = !showConfirmPassword">
+                            {{ showConfirmPassword ? '🙈' : '👁️' }}
                         </button>
                     </div>
                     <p v-if="passwordErrors.confirmPassword" class="error-text">
@@ -206,7 +206,7 @@ const submitImage = async () => {
         await authStore.fetchUserInfo();
 
         alert('프로필 이미지가 변경되었습니다.')
-        router.push('/myinfo')
+        router.push('/my-info')
     } catch (error) {
         const msg = error.response?.data?.message || '이미지 저장 중 오류가 발생했습니다.'
         alert(msg)
@@ -220,18 +220,18 @@ const submitImage = async () => {
 // ② 사용자 이름
 // ════════════════════════════════════════════════════════════
 const usernameForm = reactive({ username: '' })
-const usernameErrors = reactive({ username: '' })
+const usernameErrors = reactive({ error: '' })
 const usernameLoading = ref(false)
 
 
 const validateUsername = () => {
-    usernameErrors.username = ''
+    usernameErrors.error = ''
     if (!usernameForm.username.trim()) {
-        usernameErrors.username = '사용자 이름을 입력해주세요.'
+        usernameErrors.error = '사용자 이름을 입력해주세요.'
         return false
     }
     if (usernameForm.username.trim().length < 2) {
-        usernameErrors.username = '사용자 이름은 2자 이상이어야 합니다.'
+        usernameErrors.error = '사용자 이름은 2자 이상이어야 합니다.'
         return false
     }
     return true
@@ -244,18 +244,18 @@ const submitUsername = async () => {
     usernameLoading.value = true
     try {
         await api.patch('/member/me',
-        {
-            email: userInfo.value.email,
-            password: userInfo.value.password,
-            username: usernameForm.username.trim(),
-            image: userInfo.value.image
-        }
-    )
-        // store 동기화
-        if (authStore.userInfo) authStore.userInfo.username = usernameForm.username.trim()
+            {
+                email: userInfo.value.email,
+                password: userInfo.value.password,
+                username: usernameForm.username.trim(),
+                image: userInfo.value.image
+            }
+        )
+
+        authStore.fetchUserInfo()
 
         alert('사용자 이름이 변경되었습니다.')
-        router.push('/myinfo')
+        router.push('/my-info')
     } catch (error) {
         const msg = error.response?.data?.message || '이름 변경 중 오류가 발생했습니다.'
         alert(msg)
@@ -278,9 +278,9 @@ const passwordErrors = reactive({
     confirmPassword: ''
 })
 const passwordLoading = ref(false)
-const showCurrent = ref(false)
-const showNew = ref(false)
-const showConfirm = ref(false)
+const showCurrentPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
 
 const passwordMatch = computed(() =>
     passwordForm.newPassword === passwordForm.confirmPassword
@@ -323,7 +323,7 @@ const submitPassword = async () => {
         })
 
         alert('비밀번호가 변경되었습니다.')
-        router.push('/myinfo')
+        router.push('/my-info')
     } catch (error) {
         const msg = error.response?.data?.message || '비밀번호 변경 중 오류가 발생했습니다.'
         alert(msg)
@@ -335,7 +335,7 @@ const submitPassword = async () => {
 onMounted(
     async() => {
         if(!userInfo.value){
-            await authStore.fetchUserInfo
+            await authStore.fetchUserInfo()
         }
     }
 )
