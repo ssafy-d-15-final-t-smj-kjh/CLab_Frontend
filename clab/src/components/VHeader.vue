@@ -3,8 +3,8 @@
         <div class="header-left">
             <h1 class="logo" @click="goMain">CLab</h1>
             <nav class="nav-menu">
-                <router-link to="/main" class="nav-item" active-class="active">Lab</router-link>
-                <a href="#" class="nav-item">대화 목록</a>
+                <router-link to="/main" class="nav-item" active-class="active">메인</router-link>
+                <router-link to="/chat-list" class="nav-item" active-class="active">대화 목록</router-link>
                 <router-link to="/myinfo" class="nav-item" active-class="active">내 정보</router-link>
             </nav>
         </div>
@@ -20,18 +20,22 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/stores/auth' // 스토어 임포트
 
 const router = useRouter()
-const isLoggedIn = ref(true)
+const authStore = useAuthStore();
+
+const { isLoggedIn } = storeToRefs(authStore)
 
 const goMain = () => router.push('/main')
 const goMyInfo = () => router.push('/myinfo')
 const goLogin = () => router.push('/login')
 
 const logout = () => {
-    isLoggedIn.value = false
+    authStore.logout();
+    alert('성공적으로 로그아웃 되었습니다.')
     router.push('/login')
 }
 </script>
@@ -42,7 +46,7 @@ const logout = () => {
     justify-content: space-between;
     align-items: center;
     padding: 14px 40px;
-    background: var(--sand-light);
+    background: var(--sand-dark);
     border-bottom: 2px dashed var(--sky-blue);
     position: sticky;
     top: 0;

@@ -13,15 +13,16 @@
 
                 <div class="avatar-wrap">
                     <div class="avatar">
-                        <img src="https://api.dicebear.com/7.x/fun-emoji/svg?seed=crab" alt="avatar" />
+                        <img v-if="userInfo?.image" :src="userInfo.image" alt="avatar" class="profile-preview" />
+                        <img v-else src="https://api.dicebear.com/7.x/fun-emoji/svg?seed=crab" alt="avatar" />
                         <span class="avatar-badge">🦀</span>
                     </div>
                 </div>
 
-                <div class="info-list">
+                <div class="info-list" v-if="userInfo">
                     <div class="info-item">
                         <span class="info-label">Nickname</span>
-                        <span class="info-value">{{ userInfo.nickname }}</span>
+                        <span class="info-value">{{ userInfo.username }}</span>
                         <span class="bar bar-yellow"></span>
                     </div>
                     <div class="info-item">
@@ -29,14 +30,15 @@
                         <span class="info-value">{{ userInfo.email }}</span>
                         <span class="bar bar-blue"></span>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">Join Date</span>
-                        <span class="info-value">{{ userInfo.joinDate }}</span>
-                        <span class="bar bar-red"></span>
-                    </div>
                 </div>
 
-                <button class="edit-btn">✏️ 정보 수정 (Edit Info)</button>
+                <div class="info-list" v-else>
+                    <p style="text-align: center; color: var(--text-gray); font-size: 14px;">
+                        데이터를 불러오는 중입니다... 🦀
+                    </p>
+                </div>
+
+                <button class="edit-btn" @click="editProfile">✏️ 정보 수정 (Edit Info)</button>
                 <button class="logout-btn" @click="logout">↪️ 로그아웃 (Logout)</button>
             </div>
         </main>
@@ -45,18 +47,30 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
-const userInfo = ref({
-    nickname: 'Dr. Pinchy',
-    email: 'pinchy@crablab.ocean',
-    joinDate: 'Oct 12, 2023',
+const {userInfo} = storeToRefs(authStore)
+
+onMounted(async () => {
+    // 사용자가 새로고침을 해서 스토어의 userInfo가 날아갔다면 다시 API를 호출합니다.
+    if (!userInfo.value) {
+        await authStore.fetchUserInfo()
+    }
 })
 
+const editProfile = () => {
+    router.push('/edit-profile')
+}
+
 const logout = () => {
+    authStore.logout() // 📌 Pinia 스토어에 있는 토큰 삭제 및 상태 초기화 로직 실행
+    alert('성공적으로 로그아웃 되었습니다.')
     router.push('/login')
 }
 </script>

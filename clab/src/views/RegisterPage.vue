@@ -7,7 +7,7 @@
             <form class="register-form" @submit.prevent="handleRegister">
                 <label>✉️ 이메일 (Email)</label>
                 <div class="input-box">
-                    <input type="email" v-model="email" placeholder="crab@coastal-lab.com" />
+                    <input type="email" v-model="email" placeholder="이메일을 입력해주세요" />
                 </div>
 
                 <label>🔒 비밀번호 (Password)</label>
@@ -16,11 +16,11 @@
                 </div>
 
                 <label>🦀 닉네임 (Nickname)</label>
-                <div class="input-box" :class="{ error: nicknameError }">
-                    <input type="text" v-model="nickname" placeholder="CrabbyPatty" />
-                    <span v-if="nicknameError" class="error-mark">❗</span>
+                <div class="input-box" :class="{ error: usernameError }">
+                    <input type="text" v-model="username" placeholder="닉네임을 입력해주세요" />
+                    <span v-if="usernameError" class="error-mark">❗</span>
                 </div>
-                <p v-if="nicknameError" class="error-text">
+                <p v-if="usernameError" class="error-text">
                     ⚠️ 이미 사용 중인 닉네임 (Nickname already in use)
                 </p>
 
@@ -37,21 +37,39 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '@/api/axios'
 
 const router = useRouter()
 
 const email = ref('')
 const password = ref('')
-const nickname = ref('')
-const nicknameError = ref(false)
+const username = ref('')
+const usernameError = ref(false)
 
-const handleRegister = () => {
-    if (nickname.value.toLowerCase() === 'crabbypatty') {
-        nicknameError.value = true
-        return
+const handleRegister = async () => {
+    usernameError.value = false
+    try {
+        const response = await api.post('/member/join', {
+            email: email.value,
+            password: password.value,
+            username: username.value
+        })
+        const apiResponse = response.data;
+        if (apiResponse.status == 201) {
+            alert(apiResponse.data);
+            router.push('/login');
+        } else {
+            alert(apiResponse.message);
+        }
+    } catch (error) {
+        console.error('API 호출 에러:', error);
+        if (error.response && error.response.data) {
+            const errorData = error.response.data;
+            alert(`[${errorData.code}] ${errorData.message}`);
+        } else {
+            alert('회원가입 처리에 실패했습니다. 입력 정보를 확인해주세요.');
+        }
     }
-    nicknameError.value = false
-    router.push('/login')
 }
 </script>
 

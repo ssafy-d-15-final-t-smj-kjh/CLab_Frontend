@@ -5,7 +5,9 @@
         <div class="bubble bubble3"></div>
 
         <div class="login-card">
-            <div class="crab-icon">🦀</div>
+            <div class="crab-icon">
+                <img src="@/assets/imgs/AB6AXU_1.PNG" alt="crab" height="100px">
+            </div>
             <h1 class="brand">CLab</h1>
             <p class="subtitle">연구소 입장하기</p>
             <p class="subtitle-en">(Welcome Back)</p>
@@ -19,8 +21,8 @@
                 <label>이메일 (Email)</label>
                 <div class="input-box">
                     <span class="input-icon">✉️</span>
-                    <input type="email" v-model="email" placeholder="crab@clab.com" />
-                </div>
+                    <input type="email" v-model="email" placeholder="이메일을 입력해주세요" />
+                </div>  
 
                 <label>비밀번호 (Password)</label>
                 <div class="input-box">
@@ -29,11 +31,8 @@
                 </div>
 
                 <div class="options-row">
-                    <label class="keep-login">
-                        <input type="checkbox" v-model="keepLogin" />
-                        로그인 유지
-                    </label>
-                    <a href="#" class="forgot">비밀번호를 잊으셨나요?</a>
+                    <a href="find-email" class="find-email">이메일 찾기</a>
+                    <a href="find-pwd" class="find-password">비밀번호 찾기</a>
                 </div>
 
                 <button type="submit" class="login-btn">🦀 로그인 (Login)</button>
@@ -54,21 +53,45 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '@/api/axios'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore();
 
 const email = ref('')
 const password = ref('')
-const keepLogin = ref(false)
 const showError = ref(false)
 
-const handleLogin = () => {
-    if (!email.value || !password.value) {
-        showError.value = true
-        return
+const handleLogin = async () => {
+    try {
+        const response = await api.post('/auth/login',
+            {
+                email: email.value,
+                password: password.value
+            }
+        )
+        const apiResponse = response.data;
+        if(apiResponse.status == 200){
+            alert('로그인에 성공하였습니다. 연구소 입장을 환영합니다!');
+            showError.value = false;
+
+            authStore.login(apiResponse.data)
+            await authStore.fetchUserInfo();
+            
+            router.push('/main');
+        } else {
+            alert(apiResponse.message);
+        }
+    } catch (error) {
+        console.error('API 호출 에러:', error);
+        if (error.response && error.response.data) {
+            const errorData = error.response.data;
+            alert(`[${errorData.code}] ${errorData.message}`);
+        } else {
+            alert('로그인에 실패했습니다. 입력 정보를 확인해주세요.');
+        }
     }
-    showError.value = false
-    router.push('/main')
 }
 </script>
 
