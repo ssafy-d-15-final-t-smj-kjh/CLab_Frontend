@@ -3,7 +3,7 @@
 
         <!-- 헤더 -->
         <header class="page-header">
-            <button class="back-btn" @click="router.push('/')">
+            <button class="back-btn" @click="router.push('/main')">
                 <span class="back-icon">←</span>
             </button>
             <h1 class="page-title">🗨️ 내 대화 목록</h1>
