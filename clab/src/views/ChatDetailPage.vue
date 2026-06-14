@@ -3,7 +3,7 @@
 
         <!-- 헤더 -->
         <header class="page-header">
-            <button class="back-btn" @click="router.push('/chat')">
+            <button class="back-btn" @click="router.push('/chat-list')">
                 <span class="back-icon">←</span>
             </button>
             <h1 class="page-title">💬 대화 상세</h1>
@@ -97,8 +97,11 @@
                     <button class="btn-secondary" @click="router.push('/chat-list')">
                         ← 목록으로
                     </button>
-                    <button class="btn-primary" @click="router.push(`/chat/${chatInfo.id}/conversation`)">
-                        💬 대화 이어가기
+                    <button class="btn-third" @click="deleteChat">
+                        ❌ 삭제하기
+                    </button>
+                    <button class="btn-primary" @click="router.push(`/chat/update/${chatInfo.id}`)">
+                        ✏️ 수정하기
                     </button>
                 </div>
 
@@ -123,6 +126,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useChatStore } from '@/stores/chat'
+import api from '@/api/axios'
 
 const router = useRouter()
 const route = useRoute()
@@ -130,6 +134,7 @@ const chatStore = useChatStore()
 const { chatInfo } = storeToRefs(chatStore)
 
 const isLoading = ref(false)
+const chatId = route.params.id
 
 // ── 날짜 포맷 ────────────────────────────────────────────
 const formatDate = (dateStr) => {
@@ -142,16 +147,28 @@ const formatDate = (dateStr) => {
     })
 }
 
+const deleteChat = async() => {
+    const confirmed = confirm('정말 삭제하시겠습니까?')
+    if (!confirmed) return
+
+    try {
+        await api.delete(`/chat/${chatId}`)
+        alert('대화를 삭제하였습니다.')
+        router.push('/chat-list')
+    } catch (e) {
+        console.error(e)
+        const msg = e.response?.data?.message || '삭제 중 오류가 발생했습니다.'
+        alert(msg)
+    }
+}
 // ── 마운트 시 데이터 fetch ────────────────────────────────
 onMounted(async () => {
-    const id = route.params.id
-
     // 이미 같은 id의 데이터가 store에 있으면 재요청 생략
-    if (chatInfo.value && String(chatInfo.value.id) === String(id)) return
+    if (chatInfo.value && String(chatInfo.value.id) === String(chatId)) return
 
     isLoading.value = true
     try {
-        await chatStore.fetchChatInfo(id)
+        await chatStore.fetchChatInfo(chatId)
     } catch (e) {
         console.error(e)
     } finally {
@@ -426,6 +443,33 @@ onMounted(async () => {
     background: var(--sand);
     border-color: var(--ocean-blue);
     color: var(--text-dark);
+}
+
+.btn-third {
+    flex: 2;
+    padding: 14px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--crab-red), var(--crab-orange));
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(91, 180, 196, 0.35);
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-third:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.btn-third:active {
+    transform: translateY(0);
 }
 
 .btn-primary {

@@ -1,69 +1,81 @@
-import LoginPage from '@/views/LoginPage.vue'
-import MainPage from '@/views/MainPage.vue'
-import MyInfoPage from '@/views/MyInfoPage.vue'
-import { createRouter, createWebHistory } from 'vue-router'
-import FindEmailPage from '@/views/FindEmailPage.vue'
-import FindPasswordPage from '@/views/FindPasswordPage.vue'
-import RegisterPage from '@/views/RegisterPage.vue'
-import EditProfilePage from '@/views/EditProfilePage.vue'
-import ChatListPage from '@/views/ChatListPage.vue'
-import ChatDetailPage from '@/views/ChatDetailPage.vue'
+import LoginPage from "@/views/LoginPage.vue";
+import MainPage from "@/views/MainPage.vue";
+import MyInfoPage from "@/views/MyInfoPage.vue";
+import { createRouter, createWebHistory } from "vue-router";
+import FindEmailPage from "@/views/FindEmailPage.vue";
+import FindPasswordPage from "@/views/FindPasswordPage.vue";
+import RegisterPage from "@/views/RegisterPage.vue";
+import EditProfilePage from "@/views/EditProfilePage.vue";
+import ChatListPage from "@/views/ChatListPage.vue";
+import ChatDetailPage from "@/views/ChatDetailPage.vue";
+import UploadChatPage from "@/views/UploadChatPage.vue";
+import EditChatPage from "@/views/EditChatPage.vue";
 
 const routes = [
-{
-  path: '/',
-  redirect: '/login'
-},
-{
-  path: '/find-email',
-  name: 'FindEmail',
-  component: FindEmailPage,
-},
-{
-  path: '/find-pwd',
-  name: 'FindPassword',
-  component: FindPasswordPage,
-},
-{
-  path: '/register',
-  name: 'Register',
-  component: RegisterPage,
-},
-{
-  path: '/main',
-  name: 'Main',
-  component: MainPage,
-},
-{
-  path: '/login',
-  name: 'Login',
-  component: LoginPage,
-},
-{
-  path: '/myinfo',
-  name: 'MyInfo',
-  component: MyInfoPage,
-},
-{
-  path: '/edit-profile',
-  name: 'EditProfile',
-  component: EditProfilePage,
-},
-{
-  path: '/chat-list',
-  name: 'ChatList',
-  component: ChatListPage,
-},
-{
-  path: '/chat/:id',
-  name: 'ChatDetail',
-  component: ChatDetailPage,
-},
-]
+  {
+    path: "/",
+    redirect: "/login",
+  },
+  {
+    path: "/find-email",
+    name: "FindEmail",
+    component: FindEmailPage,
+  },
+  {
+    path: "/find-pwd",
+    name: "FindPassword",
+    component: FindPasswordPage,
+  },
+  {
+    path: "/register",
+    name: "Register",
+    component: RegisterPage,
+  },
+  {
+    path: "/main",
+    name: "Main",
+    component: MainPage,
+  },
+  {
+    path: "/login",
+    name: "Login",
+    component: LoginPage,
+  },
+  {
+    path: "/myinfo",
+    name: "MyInfo",
+    component: MyInfoPage,
+  },
+  {
+    path: "/edit-profile",
+    name: "EditProfile",
+    component: EditProfilePage,
+  },
+  {
+    path: "/chat-list",
+    name: "ChatList",
+    component: ChatListPage,
+  },
+  {
+    path: "/chat/:id",
+    name: "ChatDetail",
+    component: ChatDetailPage,
+  },
+  {
+    path: "/upload-chat",
+    name: "UploadChat",
+    component: UploadChatPage
+  },
+  {
+    path: '/chat/update/:id',
+    name: 'EditChat',
+    component: EditChatPage
+  }
+];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes
-})
+  routes,
+});
 
-export default router
+export default router;

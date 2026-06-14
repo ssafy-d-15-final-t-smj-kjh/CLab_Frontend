@@ -59,10 +59,11 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router';
 
+const router = useRouter()
 const goAnalyze = () => {
-    // 분석 페이지 라우트 추가 시 연결
-    console.log('대화 분석 시작!')
+    router.push('/upload-chat')
 }
 
 const features = ref([

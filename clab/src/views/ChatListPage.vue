@@ -18,6 +18,10 @@
                 <span class="summary-text">
                     총 <strong>{{ chats.length }}</strong>개의 대화가 있어요!
                 </span>
+                <button class="btn-upload" @click="router.push('/upload-chat')">
+                    <span>📂</span>
+                    대화 분석하기
+                </button>
             </div>
 
             <!-- 목록 없을 때 -->
@@ -25,6 +29,10 @@
                 <span class="empty-icon">🌊</span>
                 <p class="empty-title">아직 대화가 없어요</p>
                 <p class="empty-sub">새로운 대화를 시작해보세요!</p>
+                <button class="btn-upload btn-upload--large" @click="router.push('/upload-chat')">
+                    <span>📂</span>
+                    첫 대화를 분석해보세요!
+                </button>
             </div>
 
             <!-- 대화 목록 -->
@@ -182,6 +190,7 @@ onMounted(async () => {
 }
 
 .summary-text {
+    flex: 1;
     font-size: 14px;
     font-weight: 500;
 }
@@ -189,6 +198,46 @@ onMounted(async () => {
 .summary-text strong {
     font-size: 18px;
     font-weight: 800;
+}
+
+.btn-upload {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--white);
+    color: var(--ocean-blue);
+    border: none;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn-upload:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-upload:active {
+    transform: translateY(0);
+}
+
+/* 빈 상태 전용 큰 버튼 */
+.btn-upload--large {
+    margin-top: 8px;
+    padding: 12px 24px;
+    font-size: 15px;
+    background: linear-gradient(135deg, var(--ocean-blue), var(--sky-blue));
+    color: var(--white);
+    box-shadow: 0 4px 14px rgba(91,180,196,0.4);
+}
+
+.btn-upload--large:hover {
+    opacity: 0.9;
 }
 
 /* ── 빈 상태 ────────────────────────────────────────────── */
