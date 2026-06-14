@@ -13,7 +13,7 @@
                 <span>·</span>
                 <a href="#">고객센터</a>
             </div>
-            <p class="footer-copy">© 2024 CLab. All rights reserved.</p>
+            <p class="footer-copy">© 2026 CLab. All rights reserved.</p>
         </div>
     </footer>
 </template>
@@ -24,7 +24,7 @@
 
 <style scoped>
 .app-footer {
-    background: var(--sky-blue);
+    background: var(--sand-dark);
     padding: 30px 40px;
     margin-top: auto;
 }
@@ -33,7 +33,7 @@
     max-width: 1000px;
     margin: 0 auto;
     text-align: center;
-    color: var(--white);
+    color: var(--black);
 }
 
 .footer-logo {

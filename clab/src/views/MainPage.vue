@@ -22,8 +22,7 @@
 
                 <div class="hero-image">
                     <div class="crab-circle">
-                        <span class="big-crab">🦀</span>
-                        <div class="speech-bubble">CLab.</div>
+                        <img src="../assets/imgs/AB6AXU_1.PNG"/>
                     </div>
                 </div>
             </section>
