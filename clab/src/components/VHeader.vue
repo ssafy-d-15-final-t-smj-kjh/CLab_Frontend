@@ -5,13 +5,14 @@
             <nav class="nav-menu">
                 <router-link to="/main" class="nav-item" active-class="active">메인</router-link>
                 <router-link to="/chat-list" class="nav-item" active-class="active">대화 목록</router-link>
-                <router-link to="/myinfo" class="nav-item" active-class="active">내 정보</router-link>
+                <router-link v-if="isLoggedIn" to="/my-info" class="nav-item" active-class="active">내 정보</router-link>
             </nav>
         </div>
 
         <div class="header-right">
-            <div class="profile-img" @click="goMyInfo">
-                <img src="https://api.dicebear.com/7.x/fun-emoji/svg?seed=crab" alt="profile" />
+            <div v-if="isLoggedIn" class="profile-img" @click="goMyInfo">
+                <img v-if="userInfo?.image" :src="userInfo.image" alt="profile" />
+                <img v-else src="https://api.dicebear.com/7.x/fun-emoji/svg?seed=crab" alt="profile" />
             </div>
             <button v-if="isLoggedIn" class="auth-btn logout" @click="logout">로그아웃</button>
             <button v-else class="auth-btn login" @click="goLogin">로그인</button>
@@ -27,10 +28,10 @@ import { useAuthStore } from '@/stores/auth' // 스토어 임포트
 const router = useRouter()
 const authStore = useAuthStore();
 
-const { isLoggedIn } = storeToRefs(authStore)
+const { isLoggedIn, userInfo } = storeToRefs(authStore)
 
 const goMain = () => router.push('/main')
-const goMyInfo = () => router.push('/myinfo')
+const goMyInfo = () => router.push('/my-info')
 const goLogin = () => router.push('/login')
 
 const logout = () => {
