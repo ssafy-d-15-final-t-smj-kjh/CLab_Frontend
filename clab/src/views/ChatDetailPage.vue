@@ -58,7 +58,7 @@
                                 <span class="label-icon">📅</span>
                                 등록일
                             </span>
-                            <span class="info-value">{{ formatDate(chatInfo.createdAt) }}</span>
+                            <span class="info-value">{{ formatTime(chatInfo.createdAt) }}</span>
                         </div>
 
                         <div class="info-item">
@@ -66,15 +66,7 @@
                                 <span class="label-icon">✏️</span>
                                 수정일
                             </span>
-                            <span class="info-value">{{ formatDate(chatInfo.updatedAt) }}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="info-label">
-                                <span class="label-icon">🆔</span>
-                                대화 ID
-                            </span>
-                            <span class="info-value info-value--id"># {{ chatInfo.id }}</span>
+                            <span class="info-value">{{ formatTime(chatInfo.updatedAt) }}</span>
                         </div>
                     </div>
                 </div>
@@ -137,13 +129,19 @@ const isLoading = ref(false)
 const chatId = route.params.id
 
 // ── 날짜 포맷 ────────────────────────────────────────────
-const formatDate = (dateStr) => {
+const formatTime = (dateStr) => {
     if (!dateStr) return '-'
+
     const date = new Date(dateStr)
-    return date.toLocaleDateString('ko-KR', {
+
+    return date.toLocaleString('ko-KR', {
         year: 'numeric',
         month: '2-digit',
-        day: '2-digit'
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        // second: '2-digit',
+        hour12: true
     })
 }
 
