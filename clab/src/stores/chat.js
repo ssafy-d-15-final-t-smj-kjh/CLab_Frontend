@@ -8,11 +8,11 @@ export const useChatStore = defineStore("chat", () => {
 
     const fetchChats = async () => {
         try {
-            const response = await api.get('/chat')
+            const response = await api.get('/chat/me')
             const apiResponse = response.data
             chats.value = apiResponse.data
-        } catch (e) {
-            console.log(e)
+        } catch (error) {
+            console.error('대화 정보 조회 실패:', error)
         }
     }
 
@@ -21,8 +21,8 @@ export const useChatStore = defineStore("chat", () => {
             const response = await api.get(`/chat/${id}`)
             const apiResponse = response.data
             chatInfo.value = apiResponse.data
-        } catch (e) {
-            console.log(e)
+        } catch (error) {
+            console.error('대화 정보 조회 실패:', error)
         }
     }
 

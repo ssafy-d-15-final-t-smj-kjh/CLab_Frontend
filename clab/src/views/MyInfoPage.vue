@@ -1,78 +1,106 @@
 <template>
-    <div class="myinfo-page">
+    <div class="page-container">
+        
+        <LoadingInfo v-if="isLoading" :is-loading="isLoading" />
+        
+        <RetryInfo v-else-if="error" :message="error" @retry="fetchUserInfo" />
 
-        <main class="myinfo-content">
-            <div class="profile-card">
-                <div class="card-header">
-                    <div>
-                        <h2 class="card-title">연구원 프로필</h2>
-                        <p class="card-subtitle">(Researcher Profile)</p>
+        <div v-else class="myinfo-page">
+            <main class="myinfo-content">
+                <div class="profile-card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">연구원 프로필</h2>
+                            <p class="card-subtitle">(Researcher Profile)</p>
+                        </div>
+                        <span class="flask-icon">🧪</span>
                     </div>
-                    <span class="flask-icon">🧪</span>
-                </div>
 
-                <div class="avatar-wrap">
-                    <div class="avatar">
-                        <img v-if="userInfo?.image" :src="userInfo.image" alt="avatar" class="profile-preview" />
-                        <img v-else src="https://api.dicebear.com/7.x/fun-emoji/svg?seed=crab" alt="avatar" />
-                        <span class="avatar-badge">🦀</span>
+                    <div class="avatar-wrap">
+                        <div class="avatar">
+                            <img v-if="userInfo?.image" :src="userInfo.image" alt="avatar" class="profile-preview" />
+                            <img v-else src="https://api.dicebear.com/7.x/fun-emoji/svg?seed=crab" alt="avatar" />
+                            <span class="avatar-badge">🦀</span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="info-list" v-if="userInfo">
-                    <div class="info-item">
-                        <span class="info-label">Nickname</span>
-                        <span class="info-value">{{ userInfo.username }}</span>
-                        <span class="bar bar-yellow"></span>
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-label">Nickname</span>
+                            <span class="info-value">{{ userInfo?.username }}</span>
+                            <span class="bar bar-yellow"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{{ userInfo?.email }}</span>
+                            <span class="bar bar-blue"></span>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">Email</span>
-                        <span class="info-value">{{ userInfo.email }}</span>
-                        <span class="bar bar-blue"></span>
-                    </div>
+
+                    <button class="edit-btn" @click="goToEditProfile">✏️ 정보 수정 (Edit Info)</button>
+                    <button class="logout-btn" @click="logout">↪️ 로그아웃 (Logout)</button>
                 </div>
-
-                <div class="info-list" v-else>
-                    <p style="text-align: center; color: var(--text-gray); font-size: 14px;">
-                        데이터를 불러오는 중입니다... 🦀
-                    </p>
-                </div>
-
-                <button class="edit-btn" @click="editProfile">✏️ 정보 수정 (Edit Info)</button>
-                <button class="logout-btn" @click="logout">↪️ 로그아웃 (Logout)</button>
-            </div>
-        </main>
-
+            </main>
+        </div>
+        
     </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+
+import LoadingInfo from '@/components/LoadingInfo.vue'
+import RetryInfo from '@/components/RetryInfo.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 const {userInfo} = storeToRefs(authStore)
 
-onMounted(async () => {
-    // 사용자가 새로고침을 해서 스토어의 userInfo가 날아갔다면 다시 API를 호출합니다.
-    if (!userInfo.value) {
-        await authStore.fetchUserInfo()
-    }
-})
+const isLoading = ref(false)
+const error = ref(null)
 
-const editProfile = () => {
+const fetchUserInfo = async() => {
+    isLoading.value = true
+    error.value = null
+    try {
+        await authStore.fetchUserInfo()
+    } catch (e) {
+        error.value = '사용자 정보를 불러오지 못했습니다.'
+        console.error(e)
+    } finally {
+        isLoading.value = false
+    }
+}
+
+const goToEditProfile = () => {
     router.push('/edit-profile')
 }
 
-const logout = () => {
-    authStore.logout() // 📌 Pinia 스토어에 있는 토큰 삭제 및 상태 초기화 로직 실행
-    alert('성공적으로 로그아웃 되었습니다.')
-    router.push('/login')
+const logout = async() => {
+    isLoading.value = true
+    error.value = null
+    try {
+        await authStore.logout()
+        alert('성공적으로 로그아웃 되었습니다.')
+        router.push('/login')
+    } catch (e) {
+        error.value = '로그아웃에 실패하였습니다.'
+        console.error(e)
+    } finally {
+        isLoading.value = false
+    }
 }
+
+onMounted(async () => {
+    if(!userInfo.value){
+        await fetchUserInfo()
+    }
+})
+
 </script>
 
 <style scoped>

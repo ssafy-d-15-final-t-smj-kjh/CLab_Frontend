@@ -22,7 +22,7 @@
 
                 <div class="hero-image">
                     <div class="crab-circle">
-                        <img src="../assets/imgs/AB6AXU_1.PNG"/>
+                        <img src="../assets/imgs/Clab_Icon.PNG"/>
                     </div>
                 </div>
             </section>
