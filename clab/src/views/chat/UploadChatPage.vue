@@ -125,8 +125,32 @@
 
                         </div>
                     </div>
+
+                    
+                </div>
+            </div>
+            <div class="section-card">
+                <h2 class="section-title">
+                    <span class="section-icon">✍️</span>
+                    대화 정보 입력
+                </h2>
+
+                <div class="form-group">
+                    <label class="form-label" for="title">대화 제목</label>
+                    <div class="input-wrapper">
+                        <input id="title" v-model="form.title" type="text" class="form-input"
+                            placeholder="분석할 대화의 제목을 입력하세요" :class="{ 'input-error': errors.title }" />
+                    </div>
+                    <p v-if="errors.title" class="error-text">{{ errors.title }}</p>
                 </div>
 
+                <div class="form-group" style="margin-top: 16px;">
+                    <label class="form-label" for="content">설명 또는 메모</label>
+                    <textarea id="content" v-model="form.content" class="form-textarea"
+                        placeholder="이 대화에 대한 간단한 설명이나 메모를 입력하세요" rows="5"
+                        :class="{ 'input-error': errors.content }"></textarea>
+                    <p v-if="errors.content" class="error-text">{{ errors.content }}</p>
+                </div>
             </div>
 
             <!-- 분석하기 버튼 -->
@@ -137,13 +161,13 @@
 
         </div>
 
-        <AnalysisLoading :is-loading="isLoading"/>
+        <AnalysisLoading :is-loading="isLoading" />
 
     </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
@@ -163,8 +187,46 @@ const isDragging = ref(false)
 const selectedCategory = ref('personality')   // 기본값 : 성격 분석
 const isLoading = ref(false)
 
+// ✨ [신규] 제목 및 내용 폼 상태 추가 ───────────────────────────
+const form = reactive({
+    title: '',
+    content: ''
+})
+
+const errors = reactive({
+    title: '',
+    content: ''
+})
+
 // ── 분석하기 버튼 활성 조건 ──────────────────────────────────
-const canSubmit = computed(() => uploadedFile.value && selectedCategory.value)
+const canSubmit = computed(() => 
+    uploadedFile.value && 
+    selectedCategory.value && 
+    form.title.trim() && 
+    form.content.trim()
+)
+
+// ── 유효성 검사 함수 추가 ──────────────────────────────────────
+const validateForm = () => {
+    errors.title = ''
+    errors.content = ''
+    let isValid = true
+
+    if (!form.title.trim()) {
+        errors.title = '제목을 입력해주세요.'
+        isValid = false
+    } else if (form.title.trim().length < 2) {
+        errors.title = '제목은 2자 이상 입력해주세요.'
+        isValid = false
+    }
+
+    if (!form.content.trim()) {
+        errors.content = '내용을 입력해주세요.'
+        isValid = false
+    }
+
+    return isValid
+}
 
 // ── 파일 입력 트리거 ─────────────────────────────────────────
 const triggerFileInput = () => fileInput.value.click()
@@ -177,38 +239,32 @@ const formatFileSize = (bytes) => {
 }
 
 // ── 파일 읽기 ────────────────────────────────────────────────
-const readFile = (file) => {
+const handleFile = (file) => {
     if (!file) return
-    const allowed = ['text/plain', 'text/csv', 'application/vnd.ms-excel']
     const extOk = file.name.endsWith('.txt') || file.name.endsWith('.csv')
 
-    if(!allowed) {
-        alert('올바르지 않은 형식입니다!')
-        return
-    }
     if (!extOk) {
         alert('txt 또는 csv 파일만 업로드할 수 있어요!')
         return
     }
 
     uploadedFile.value = file
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-        fileContent.value = e.target.result
+    
+    // 💡 편리함을 위해 파일을 올렸을 때 제목 칸이 비어있다면 파일명으로 자동 세팅해줍니다.
+    if (!form.title.trim()) {
+        form.title = file.name.replace(/\.[^/.]+$/, "") // 확장자 제거한 파일명
     }
-    reader.readAsText(file, 'UTF-8')
 }
 
 // ── 파일 선택 ────────────────────────────────────────────────
 const handleFileChange = (e) => {
-    readFile(e.target.files[0])
+    handleFile(e.target.files[0])
 }
 
 // ── 드래그앤드롭 ─────────────────────────────────────────────
 const handleDrop = (e) => {
     isDragging.value = false
-    readFile(e.dataTransfer.files[0])
+    handleFile(e.dataTransfer.files[0])
 }
 
 // ── 파일 제거 ────────────────────────────────────────────────
@@ -220,23 +276,29 @@ const removeFile = () => {
 
 // ── 제출 ────────────────────────────────────────────────────
 const handleSubmit = async () => {
-    if (!canSubmit.value) return
+    if (!canSubmit.value || !validateForm()) return
 
     isLoading.value = true
 
     try {
         const now = new Date().toISOString()
+        const formData = new FormData()
+
+        formData.append('file', uploadedFile.value)
 
         const chatDto = {
             userId: userInfo.value?.id ?? 0,
             createdAt: now,
             updatedAt: now,
             source: selectedCategory.value,
-            title: uploadedFile.value.name,
-            content: fileContent.value
+            title: form.title.trim(),
+            content: form.content.trim()
         }
 
-        const response = await api.post('/chat', chatDto)
+        const jsonBlob = new Blob([JSON.stringify(chatDto)], { type: 'application/json' })
+        formData.append('dto', jsonBlob)
+
+        const response = await api.post('/chat', formData)
         const apiResponse = response.data
         const chatId = apiResponse.data.id
 
@@ -574,6 +636,35 @@ const handleSubmit = async () => {
     font-weight: 700;
 }
 
+.form-textarea {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid var(--sand-dark, #ccc);
+    border-radius: 14px;
+    font-size: 14px;
+    color: var(--text-dark, #333);
+    background: var(--sand-light, #f9f9f9);
+    outline: none;
+    resize: none; /* 크기조절 바 비활성화 */
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.form-textarea::placeholder {
+    color: #bbb;
+}
+
+.form-textarea:focus {
+    border-color: var(--ocean-blue, #5bb4c4);
+    background: var(--white, #fff);
+    box-shadow: 0 0 0 3px rgba(91, 180, 196, 0.15);
+}
+
+.form-textarea.input-error {
+    border-color: var(--crab-orange, #e8554e);
+    box-shadow: 0 0 0 3px rgba(232, 85, 78, 0.1);
+}
+
 /* ── 분석하기 버튼 ──────────────────────────────────────── */
 .btn-analyze {
     width: 100%;
@@ -704,5 +795,4 @@ const handleSubmit = async () => {
         opacity: 1;
     }
 }
-
 </style>

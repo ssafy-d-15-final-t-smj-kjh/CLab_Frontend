@@ -48,7 +48,6 @@
                         </div>
                         <h3 class="feature-name">{{ feature.name }}</h3>
                         <p class="feature-desc">{{ feature.desc }}</p>
-                        <a href="#" class="feature-link">분석 시작하기 →</a>
                     </div>
                 </div>
             </section>

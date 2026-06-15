@@ -53,7 +53,7 @@
                     <div class="stat-card">
                         <div class="stat-card-icon">📝</div>
                         <div class="stat-card-value">{{ participant?.chat_length ?? '-' }}</div>
-                        <div class="stat-card-label">평균 대화길이</div>
+                        <div class="stat-card-label">대화길이</div>
                     </div>
                 </div>
             </div>
@@ -109,7 +109,7 @@ const participantStore = useParticipantStore()
 const personaStore = usePersonaStore()
 const contentStore = useContentStore()
 
-// const chatId = route.params.chatId
+const chatId = route.params.chatId
 const participantId = route.params.participantId
 
 const { participant } = storeToRefs(participantStore)
@@ -142,8 +142,8 @@ const fetchParticipant = async () => {
     await participantStore.fetchParticipantInfo(participantId)
 
     // 페르소나가 있으면 추가 조회
-    if (participant.value?.persona_id) {
-        await fetchPersona(participant.value.persona_id)
+    if (participant.value?.personaId) {
+        await fetchPersona(participant.value.personaId)
     }
 }
 
@@ -180,7 +180,6 @@ const formatDateTime = (timeStr) => {
 }
 
 const goBack = () => {
-    const chatId = route.params.chatId
     router.push(`/chat/${chatId}/participant-list`)
 }
 
@@ -444,9 +443,6 @@ onMounted(() => {
     line-height: 1.7;
     padding: 0 8px;
 }
-
-/* 대화 내용 */
-.messages-section {}
 
 .messages-header {
     display: flex;
