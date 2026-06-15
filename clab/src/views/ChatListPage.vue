@@ -53,18 +53,17 @@
                         <div class="card-dates">
                             <span class="date-item">
                                 <span class="date-icon">📅</span>
-                                등록일 {{ formatDate(chat.createdAt) }}
+                                등록일 {{ formatTime(chat.createdAt) }}
                             </span>
                             <span class="date-divider">·</span>
                             <span class="date-item">
                                 <span class="date-icon">✏️</span>
-                                수정일 {{ formatDate(chat.updatedAt) }}
+                                수정일 {{ formatTime(chat.updatedAt) }}
                             </span>
                         </div>
                     </div>
                 </li>
             </ul>
-
         </div>
     </div>
 </template>
@@ -79,18 +78,26 @@ const router = useRouter()
 const chatStore = useChatStore()
 
 // ── 날짜 포맷 ───────────────────────────────────────────────
-const formatDate = (dateStr) => {
+
+const formatTime = (dateStr) => {
+    if (!dateStr) return '-'
+
     const date = new Date(dateStr)
-    return date.toLocaleDateString('ko-KR', {
+
+    return date.toLocaleString('ko-KR', {
         year: 'numeric',
         month: '2-digit',
-        day: '2-digit'
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        // second: '2-digit',
+        hour12: true
     })
 }
 
 // ── 상세 이동 ───────────────────────────────────────────────
 const goToDetail = (id) => {
-    router.push(`/chat/${id}`)
+    router.push(`/chat-detail/${id}`)
 }
 
 // ── 데이터 ──────────────────────────────────────────────────

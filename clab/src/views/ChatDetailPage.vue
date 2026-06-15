@@ -86,13 +86,13 @@
 
                 <!-- 하단 버튼 -->
                 <div class="button-group">
-                    <button class="btn-secondary" @click="router.push('/chat-list')">
+                    <button class="btn-secondary" @click="goToChatList">
                         ← 목록으로
                     </button>
-                    <button class="btn-third" @click="deleteChat">
+                    <button class="btn-third" @click="goToDeleteChat">
                         ❌ 삭제하기
                     </button>
-                    <button class="btn-primary" @click="router.push(`/chat/update/${chatInfo.id}`)">
+                    <button class="btn-primary" @click="goToEditChat">
                         ✏️ 수정하기
                     </button>
                 </div>
@@ -144,8 +144,9 @@ const formatTime = (dateStr) => {
         hour12: true
     })
 }
-
-const deleteChat = async() => {
+const goToChatList = router.push(`/chat-list`)
+const goToEditChat = router.push(`/edit-chat/${chatId}`)
+const goToDeleteChat = async() => {
     const confirmed = confirm('정말 삭제하시겠습니까?')
     if (!confirmed) return
 
@@ -161,10 +162,9 @@ const deleteChat = async() => {
 }
 // ── 마운트 시 데이터 fetch ────────────────────────────────
 onMounted(async () => {
-    // 이미 같은 id의 데이터가 store에 있으면 재요청 생략
-    if (chatInfo.value && String(chatInfo.value.id) === String(chatId)) return
 
     isLoading.value = true
+    
     try {
         await chatStore.fetchChatInfo(chatId)
     } catch (e) {

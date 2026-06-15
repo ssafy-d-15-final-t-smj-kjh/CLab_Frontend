@@ -12,66 +12,66 @@ import UploadChatPage from "@/views/UploadChatPage.vue";
 import EditChatPage from "@/views/EditChatPage.vue";
 
 const routes = [
-  {
-    path: "/",
-    redirect: "/login",
-  },
-  {
-    path: "/find-email",
-    name: "FindEmail",
-    component: FindEmailPage,
-  },
-  {
-    path: "/find-pwd",
-    name: "FindPassword",
-    component: FindPasswordPage,
-  },
-  {
-    path: "/register",
-    name: "Register",
-    component: RegisterPage,
-  },
-  {
-    path: "/main",
-    name: "Main",
-    component: MainPage,
-  },
-  {
-    path: "/login",
-    name: "Login",
-    component: LoginPage,
-  },
-  {
-    path: "/myinfo",
-    name: "MyInfo",
-    component: MyInfoPage,
-  },
-  {
-    path: "/edit-profile",
-    name: "EditProfile",
-    component: EditProfilePage,
-  },
-  {
-    path: "/chat-list",
-    name: "ChatList",
-    component: ChatListPage,
-  },
-  {
-    path: "/chat/:id",
-    name: "ChatDetail",
-    component: ChatDetailPage,
-  },
-  {
+{
+  path: '/',
+  redirect: '/login'
+},
+{
+  path: '/find-email',
+  name: 'FindEmail',
+  component: FindEmailPage,
+},
+{
+  path: '/find-pwd',
+  name: 'FindPassword',
+  component: FindPasswordPage,
+},
+{
+  path: '/register',
+  name: 'Register',
+  component: RegisterPage,
+},
+{
+  path: '/main',
+  name: 'Main',
+  component: MainPage,
+},
+{
+  path: '/login',
+  name: 'Login',
+  component: LoginPage,
+},
+{
+  path: '/my-info',
+  name: 'MyInfo',
+  component: MyInfoPage,
+},
+{
+  path: '/edit-profile',
+  name: 'EditProfile',
+  component: EditProfilePage,
+},
+{
+  path: '/chat-list',
+  name: 'ChatList',
+  component: ChatListPage,
+},
+{
+  path: '/chat-detail/:id',
+  name: 'ChatDetail',
+  component: ChatDetailPage,
+},
+{
     path: "/upload-chat",
     name: "UploadChat",
     component: UploadChatPage
   },
   {
-    path: '/chat/update/:id',
+    path: '/edit-chat/:id',
     name: 'EditChat',
     component: EditChatPage
   }
-];
+]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
