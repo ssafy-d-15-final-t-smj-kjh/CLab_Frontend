@@ -6,7 +6,7 @@
 
         <div class="login-card">
             <div class="crab-icon">
-                <img src="@/assets/imgs/AB6AXU_1.PNG" alt="crab" height="100px">
+                <img src="@/assets/imgs/Clab_Icon.PNG" alt="crab" height="100px">
             </div>
             <h1 class="brand">CLab</h1>
             <p class="subtitle">연구소 입장하기</p>
@@ -39,13 +39,13 @@
             </form>
 
             <div class="social-row">
-                <button class="social-btn lab">🧪 Lab</button>
-                <button class="social-btn beach">🏖️ Beach</button>
+                <button class="social-btn register" @click="goToRegister">🧪 회원가입</button>
+                <!-- <button class="social-btn beach">🏖️ Beach</button> -->
             </div>
 
-            <p class="register-link">
+            <!-- <p class="register-link">
                 연구원이 아니신가요? <router-link to="/register">연구소 지원하기</router-link>
-            </p>
+            </p> -->
         </div>
     </div>
 </template>
@@ -76,7 +76,7 @@ const handleLogin = async () => {
             alert('로그인에 성공하였습니다. 연구소 입장을 환영합니다!');
             showError.value = false;
 
-            authStore.login(apiResponse.data)
+            await authStore.login(apiResponse.data)
             await authStore.fetchUserInfo();
             
             router.push('/main');
@@ -92,6 +92,10 @@ const handleLogin = async () => {
             alert('로그인에 실패했습니다. 입력 정보를 확인해주세요.');
         }
     }
+}
+
+const goToRegister = () => {
+    router.push('/register')
 }
 </script>
 
@@ -278,7 +282,7 @@ const handleLogin = async () => {
     cursor: pointer;
 }
 
-.social-btn.lab {
+.social-btn.register {
     background: var(--ocean-blue);
 }
 

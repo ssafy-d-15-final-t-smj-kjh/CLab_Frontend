@@ -86,13 +86,16 @@
 
                 <!-- 하단 버튼 -->
                 <div class="button-group">
-                    <button class="btn-secondary" @click="goToChatList">
-                        ← 목록으로
+                    <button class="btn-white" @click="goToChatList">
+                        ← 목록
                     </button>
-                    <button class="btn-third" @click="goToDeleteChat">
+                    <button class="btn-participant" @click="goToParticipantList">
+                        👥 참여자 목록
+                    </button>
+                    <button class="btn-red" @click="goToDeleteChat">
                         ❌ 삭제하기
                     </button>
-                    <button class="btn-primary" @click="goToEditChat">
+                    <button class="btn-blue" @click="goToEditChat">
                         ✏️ 수정하기
                     </button>
                 </div>
@@ -144,8 +147,9 @@ const formatTime = (dateStr) => {
         hour12: true
     })
 }
-const goToChatList = router.push(`/chat-list`)
-const goToEditChat = router.push(`/edit-chat/${chatId}`)
+const goToChatList = () => router.push(`/chat-list`)
+const goToParticipantList = () => router.push(`/chat/${chatId}/participant-list`)
+const goToEditChat = () => router.push(`/edit-chat/${chatId}`)
 const goToDeleteChat = async() => {
     const confirmed = confirm('정말 삭제하시겠습니까?')
     if (!confirmed) return
@@ -424,7 +428,7 @@ onMounted(async () => {
     gap: 12px;
 }
 
-.btn-secondary {
+.btn-white {
     flex: 1;
     padding: 14px;
     border: 1.5px solid var(--sand-dark);
@@ -437,13 +441,37 @@ onMounted(async () => {
     transition: background 0.2s, border-color 0.2s;
 }
 
-.btn-secondary:hover {
+.btn-white:hover {
     background: var(--sand);
     border-color: var(--ocean-blue);
     color: var(--text-dark);
 }
 
-.btn-third {
+.btn-participant {
+    padding: 12px 20px;
+    border: 1.5px solid var(--ocean-blue, #5bb4c4);
+    border-radius: 14px;
+    background: var(--white, #ffffff);
+    color: var(--ocean-blue, #5bb4c4);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+
+.btn-participant:hover {
+    background: var(--ocean-blue, #5bb4c4);
+    color: var(--white, #ffffff);
+}
+
+.btn-participant:active {
+    transform: scale(0.98);
+}
+
+.btn-red {
     flex: 2;
     padding: 14px;
     border: none;
@@ -461,16 +489,16 @@ onMounted(async () => {
     transition: opacity 0.2s, transform 0.1s;
 }
 
-.btn-third:hover {
+.btn-red:hover {
     opacity: 0.9;
     transform: translateY(-1px);
 }
 
-.btn-third:active {
+.btn-red:active {
     transform: translateY(0);
 }
 
-.btn-primary {
+.btn-blue {
     flex: 2;
     padding: 14px;
     border: none;
@@ -488,12 +516,12 @@ onMounted(async () => {
     transition: opacity 0.2s, transform 0.1s;
 }
 
-.btn-primary:hover {
+.btn-blue:hover {
     opacity: 0.9;
     transform: translateY(-1px);
 }
 
-.btn-primary:active {
+.btn-blue:active {
     transform: translateY(0);
 }
 

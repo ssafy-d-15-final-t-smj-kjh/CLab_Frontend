@@ -137,23 +137,7 @@
 
         </div>
 
-        <!-- ── 로딩 오버레이 ── -->
-        <transition name="fade">
-            <div v-if="isLoading" class="loading-overlay">
-                <div class="loading-box">
-                    <div class="crab-wrap">
-                        <span class="crab-icon">🦀</span>
-                    </div>
-                    <p class="loading-title">대화를 분석중입니다...</p>
-                    <p class="loading-sub">꽃게가 열심히 분석중입니다.. 🌊</p>
-                    <div class="loading-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-                </div>
-            </div>
-        </transition>
+        <AnalysisLoading :is-loading="isLoading"/>
 
     </div>
 </template>
@@ -164,6 +148,8 @@ import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api/axios'
+
+import AnalysisLoading from '@/components/AnalysisLoading.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -196,6 +182,10 @@ const readFile = (file) => {
     const allowed = ['text/plain', 'text/csv', 'application/vnd.ms-excel']
     const extOk = file.name.endsWith('.txt') || file.name.endsWith('.csv')
 
+    if(!allowed) {
+        alert('올바르지 않은 형식입니다!')
+        return
+    }
     if (!extOk) {
         alert('txt 또는 csv 파일만 업로드할 수 있어요!')
         return
@@ -251,7 +241,7 @@ const handleSubmit = async () => {
         const chatId = apiResponse.data.id
 
         alert('업로드가 완료되었습니다! 분석 결과를 확인해보세요 🦀')
-        router.push(`/chat-list`)
+        router.push(`/chat-detail/${chatId}`)
 
     } catch (error) {
         console.error(error)
@@ -715,30 +705,4 @@ const handleSubmit = async () => {
     }
 }
 
-/* ── 트랜지션 ───────────────────────────────────────────── */
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 0.25s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-    opacity: 0;
-}
-
-/* ── 반응형 ─────────────────────────────────────────────── */
-@media (max-width: 680px) {
-    .main-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .content-wrapper {
-        padding: 16px 12px 48px;
-    }
-
-    .drop-zone {
-        min-height: 160px;
-        padding: 30px 16px;
-    }
-}
 </style>

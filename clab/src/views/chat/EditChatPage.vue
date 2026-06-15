@@ -3,7 +3,7 @@
 
         <!-- 헤더 -->
         <header class="page-header">
-            <button class="back-btn" @click="router.push(`/chat/detail/${chatId}`)">
+            <button class="back-btn" @click="router.push(`/chat-detail/${chatId}`)">
                 <span class="back-icon">←</span>
             </button>
             <h1 class="page-title">✏️ 대화 수정</h1>
@@ -46,7 +46,7 @@
 
             <!-- 버튼 -->
             <div class="button-group">
-                <button class="btn-cancel" @click="router.push(`/chat/${chatId}`)">
+                <button class="btn-cancel" @click="router.push(`/chat-detail/${chatId}`)">
                     취소
                 </button>
                 <button class="btn-submit" :disabled="isLoading" @click="handleSubmit">
