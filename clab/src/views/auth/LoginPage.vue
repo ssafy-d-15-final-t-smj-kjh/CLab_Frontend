@@ -6,7 +6,7 @@
 
         <div class="login-card">
             <div class="crab-icon">
-                <img src="@/assets/imgs/Clab_Icon.PNG" alt="crab" height="100px">
+                <img src="@/assets/imgs/CrabIcon.PNG" alt="crab" height="100px">
             </div>
             <h1 class="brand">CLab</h1>
             <p class="subtitle">연구소 입장하기</p>

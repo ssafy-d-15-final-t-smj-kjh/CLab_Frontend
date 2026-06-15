@@ -2,6 +2,7 @@
   <header>
     <VHeader />
   </header>
+  <LoadingInfo v-if="isLoading" :is-loading="isLoading"/>
   <div v-if="isLoading">
     <h1>로딩 중입니다...</h1>
   </div>
@@ -16,6 +17,7 @@
 import { RouterView } from 'vue-router';
 import VHeader from './components/VHeader.vue';
 import VFooter from './components/VFooter.vue';
+import LoadingInfo from './components/LoadingInfo.vue';
 
 import { ref, onMounted } from 'vue';
 

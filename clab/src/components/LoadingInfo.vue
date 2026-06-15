@@ -3,7 +3,7 @@
         <div v-if="isLoading" class="loading-overlay">
             <div class="loading-box">
                 <div class="crab-wrap">
-                    <span class="crab-icon">🦀</span>
+                    <span class="crab-icon"><img src='@/assets/imgs/CrabIcon.PNG' width="200px"></span>
                 </div>
                 <p class="loading-title">불러오는 중입니다...</p>
                 <p class="loading-sub">잠시만 기다려주세요...! 🌊</p>
