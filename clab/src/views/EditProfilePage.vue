@@ -1,159 +1,176 @@
 <template>
-    <div class="edit-profile-page">
-        <!-- Header -->
-        <header class="page-header">
-            <button class="back-btn" @click="router.push('/my-info')">
-                <span class="back-icon">←</span>
-            </button>
-            <h1 class="page-title">내 정보 수정</h1>
-            <div class="header-spacer"></div>
-        </header>
+    <div class="page-container">
 
-        <div class="content-wrapper">
+        <LoadingInfo v-if="isLoading" :is-loading="isLoading"/>
+        <RetryInfo v-else-if="error" :message="error" @retry="fetchUserInfo"/>
 
-            <!-- ① 프로필 이미지 -->
-            <div class="section-card">
-                <h2 class="section-title">
-                    <span class="section-icon">🖼️</span>
-                    프로필 이미지
-                </h2>
-                <div class="image-upload-area">
-                    <div class="image-preview-wrapper" @click="triggerFileInput">
-                        <img v-if="previewImage" :src="previewImage" alt="프로필 이미지" class="profile-preview" />
-                        <img v-else src="https://api.dicebear.com/7.x/fun-emoji/svg?seed=crab" alt="avatar" />
-                        <div class="image-overlay">
-                            <span class="camera-icon">📷</span>
+        <div class="edit-profile-page">
+            <!-- Header -->
+            <header class="page-header">
+                <button class="back-btn" @click="router.push('/my-info')">
+                    <span class="back-icon">←</span>
+                </button>
+                <h1 class="page-title">내 정보 수정</h1>
+                <div class="header-spacer"></div>
+            </header>
+
+            <div class="content-wrapper">
+
+                <!-- ① 프로필 이미지 -->
+                <div class="section-card">
+                    <h2 class="section-title">
+                        <span class="section-icon">🖼️</span>
+                        프로필 이미지
+                    </h2>
+                    <div class="image-upload-area">
+                        <div class="image-preview-wrapper" @click="triggerFileInput">
+                            <img v-if="previewImage" :src="previewImage" alt="프로필 이미지" class="profile-preview" />
+                            <img v-else src="https://api.dicebear.com/7.x/fun-emoji/svg?seed=crab" alt="avatar" />
+                            <div class="image-overlay">
+                                <span class="camera-icon">📷</span>
+                            </div>
                         </div>
-                    </div>
-                    <input ref="fileInput" type="file" accept="image/*" class="file-input-hidden"
-                        @change="handleImageChange" />
-                    <p class="image-hint">클릭하여 이미지를 변경하세요</p>
-                    <button v-if="previewImage" type="button" class="remove-image-btn" @click="removeImage">
-                        이미지 제거
-                    </button>
-                </div>
-                <div class="card-footer">
-                    <button type="button" class="btn-submit" :disabled="imageLoading || !imageChanged"
-                        @click="submitImage">
-                        <span v-if="imageLoading">⏳</span>
-                        <span v-else>💾</span>
-                        {{ imageLoading ? '저장 중...' : '이미지 저장' }}
-                    </button>
-                </div>
-            </div>
-
-            <!-- ② 사용자 이름 변경 -->
-            <div class="section-card">
-                <h2 class="section-title">
-                    <span class="section-icon">👤</span>
-                    사용자 이름 변경
-                </h2>
-                <div class="form-group">
-                    <label class="form-label" for="username">사용자 이름</label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">🐚</span>
-                        <input id="username" v-model="usernameForm.username" type="text" class="form-input"
-                            placeholder="새 사용자 이름을 입력하세요" :class="{ 'input-error': usernameErrors.username }" />
-                    </div>
-                    <p v-if="usernameErrors.error" class="error-text">
-                        {{ usernameErrors.error }}
-                    </p>
-                </div>
-                <div class="card-footer">
-                    <button type="button" class="btn-submit" :disabled="usernameLoading" @click="submitUsername">
-                        <span v-if="usernameLoading">⏳</span>
-                        <span v-else>✅</span>
-                        {{ usernameLoading ? '변경 중...' : '이름 변경' }}
-                    </button>
-                </div>
-            </div>
-
-            <!-- ③ 비밀번호 변경 -->
-            <div class="section-card">
-                <h2 class="section-title">
-                    <span class="section-icon">🔐</span>
-                    비밀번호 변경
-                </h2>
-
-                <!-- 현재 비밀번호 -->
-                <div class="form-group">
-                    <label class="form-label" for="currentPassword">현재 비밀번호</label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">🔒</span>
-                        <input id="currentPassword" v-model="passwordForm.currentPassword"
-                            :type="showCurrentPassword ? 'text' : 'password'" class="form-input" placeholder="현재 비밀번호를 입력하세요"
-                            :class="{ 'input-error': passwordErrors.currentPassword }" />
-                        <button type="button" class="toggle-password" @click="showCurrentPassword = !showCurrentPassword">
-                            {{ showCurrentPassword ? '🙈' : '👁️' }}
+                        <input ref="fileInput" type="file" accept="image/*" class="file-input-hidden"
+                            @change="handleImageChange" />
+                        <p class="image-hint">클릭하여 이미지를 변경하세요</p>
+                        <button v-if="previewImage" type="button" class="remove-image-btn" @click="removeImage">
+                            이미지 제거
                         </button>
                     </div>
-                    <p v-if="passwordErrors.currentPassword" class="error-text">
-                        {{ passwordErrors.currentPassword }}
-                    </p>
-                </div>
-
-                <!-- 새 비밀번호 -->
-                <div class="form-group">
-                    <label class="form-label" for="newPassword">새 비밀번호</label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">🔑</span>
-                        <input id="newPassword" v-model="passwordForm.newPassword" :type="showNewPassword ? 'text' : 'password'"
-                            class="form-input" placeholder="새 비밀번호를 입력하세요 (6자 이상)"
-                            :class="{ 'input-error': passwordErrors.newPassword }" />
-                        <button type="button" class="toggle-password" @click="showNewPassword = !showNewPassword">
-                            {{ showNewPassword ? '🙈' : '👁️' }}
+                    <div class="card-footer">
+                        <button type="button" class="btn-submit" :disabled="imageLoading || !imageChanged"
+                            @click="submitImage">
+                            <span v-if="imageLoading">⏳</span>
+                            <span v-else>💾</span>
+                            {{ imageLoading ? '저장 중...' : '이미지 저장' }}
                         </button>
                     </div>
-                    <p v-if="passwordErrors.newPassword" class="error-text">
-                        {{ passwordErrors.newPassword }}
-                    </p>
                 </div>
 
-                <!-- 새 비밀번호 확인 -->
-                <div class="form-group">
-                    <label class="form-label" for="confirmPassword">새 비밀번호 확인</label>
-                    <div class="input-wrapper">
-                        <span class="input-icon">🔑</span>
-                        <input id="confirmPassword" v-model="passwordForm.confirmPassword"
-                            :type="showConfirmPassword ? 'text' : 'password'" class="form-input" placeholder="새 비밀번호를 다시 입력하세요"
-                            :class="{ 'input-error': passwordErrors.confirmPassword }" />
-                        <button type="button" class="toggle-password" @click="showConfirmPassword = !showConfirmPassword">
-                            {{ showConfirmPassword ? '🙈' : '👁️' }}
+                <!-- ② 사용자 이름 변경 -->
+                <div class="section-card">
+                    <h2 class="section-title">
+                        <span class="section-icon">👤</span>
+                        사용자 이름 변경
+                    </h2>
+                    <div class="form-group">
+                        <label class="form-label" for="username">사용자 이름</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🐚</span>
+                            <input id="username" v-model="usernameForm.username" type="text" class="form-input"
+                                placeholder="새 사용자 이름을 입력하세요" :class="{ 'input-error': usernameErrors.username }" />
+                        </div>
+                        <p v-if="usernameErrors.error" class="error-text">
+                            {{ usernameErrors.error }}
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <button type="button" class="btn-submit" :disabled="usernameLoading" @click="submitUsername">
+                            <span v-if="usernameLoading">⏳</span>
+                            <span v-else>✅</span>
+                            {{ usernameLoading ? '변경 중...' : '이름 변경' }}
                         </button>
                     </div>
-                    <p v-if="passwordErrors.confirmPassword" class="error-text">
-                        {{ passwordErrors.confirmPassword }}
-                    </p>
-                    <!-- 비밀번호 일치 여부 실시간 표시 -->
-                    <p v-if="passwordForm.newPassword && passwordForm.confirmPassword"
-                        :class="passwordMatch ? 'match-text' : 'error-text'">
-                        {{ passwordMatch ? '✅ 비밀번호가 일치합니다.' : '❌ 비밀번호가 일치하지 않습니다.' }}
-                    </p>
                 </div>
 
-                <div class="card-footer">
-                    <button type="button" class="btn-submit" :disabled="passwordLoading" @click="submitPassword">
-                        <span v-if="passwordLoading">⏳</span>
-                        <span v-else>🔐</span>
-                        {{ passwordLoading ? '변경 중...' : '비밀번호 변경' }}
-                    </button>
+                <!-- ③ 비밀번호 변경 -->
+                <div class="section-card">
+                    <h2 class="section-title">
+                        <span class="section-icon">🔐</span>
+                        비밀번호 변경
+                    </h2>
+
+                    <!-- 현재 비밀번호 -->
+                    <div class="form-group">
+                        <label class="form-label" for="currentPassword">현재 비밀번호</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input id="currentPassword" v-model="passwordForm.currentPassword"
+                                :type="showCurrentPassword ? 'text' : 'password'" class="form-input"
+                                placeholder="현재 비밀번호를 입력하세요"
+                                :class="{ 'input-error': passwordErrors.currentPassword }" />
+                            <button type="button" class="toggle-password"
+                                @click="showCurrentPassword = !showCurrentPassword">
+                                {{ showCurrentPassword ? '🙈' : '👁️' }}
+                            </button>
+                        </div>
+                        <p v-if="passwordErrors.currentPassword" class="error-text">
+                            {{ passwordErrors.currentPassword }}
+                        </p>
+                    </div>
+
+                    <!-- 새 비밀번호 -->
+                    <div class="form-group">
+                        <label class="form-label" for="newPassword">새 비밀번호</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔑</span>
+                            <input id="newPassword" v-model="passwordForm.newPassword"
+                                :type="showNewPassword ? 'text' : 'password'" class="form-input"
+                                placeholder="새 비밀번호를 입력하세요 (6자 이상)"
+                                :class="{ 'input-error': passwordErrors.newPassword }" />
+                            <button type="button" class="toggle-password" @click="showNewPassword = !showNewPassword">
+                                {{ showNewPassword ? '🙈' : '👁️' }}
+                            </button>
+                        </div>
+                        <p v-if="passwordErrors.newPassword" class="error-text">
+                            {{ passwordErrors.newPassword }}
+                        </p>
+                    </div>
+
+                    <!-- 새 비밀번호 확인 -->
+                    <div class="form-group">
+                        <label class="form-label" for="confirmPassword">새 비밀번호 확인</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔑</span>
+                            <input id="confirmPassword" v-model="passwordForm.confirmPassword"
+                                :type="showConfirmPassword ? 'text' : 'password'" class="form-input"
+                                placeholder="새 비밀번호를 다시 입력하세요"
+                                :class="{ 'input-error': passwordErrors.confirmPassword }" />
+                            <button type="button" class="toggle-password"
+                                @click="showConfirmPassword = !showConfirmPassword">
+                                {{ showConfirmPassword ? '🙈' : '👁️' }}
+                            </button>
+                        </div>
+                        <p v-if="passwordErrors.confirmPassword" class="error-text">
+                            {{ passwordErrors.confirmPassword }}
+                        </p>
+                        <!-- 비밀번호 일치 여부 실시간 표시 -->
+                        <p v-if="passwordForm.newPassword && passwordForm.confirmPassword"
+                            :class="passwordMatch ? 'match-text' : 'error-text'">
+                            {{ passwordMatch ? '✅ 비밀번호가 일치합니다.' : '❌ 비밀번호가 일치하지 않습니다.' }}
+                        </p>
+                    </div>
+
+                    <div class="card-footer">
+                        <button type="button" class="btn-submit" :disabled="passwordLoading" @click="submitPassword">
+                            <span v-if="passwordLoading">⏳</span>
+                            <span v-else>🔐</span>
+                            {{ passwordLoading ? '변경 중...' : '비밀번호 변경' }}
+                        </button>
+                    </div>
                 </div>
+
             </div>
-
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api/axios'
 
+import LoadingInfo from '@/components/LoadingInfo.vue'
+import RetryInfo from '@/components/RetryInfo.vue'
+
 const router = useRouter()
 const authStore = useAuthStore();
 const { userInfo } = storeToRefs(authStore);
+
+const isLoading = ref(false)
+const error = ref(null)
 
 // ════════════════════════════════════════════════════════════
 // ① 이미지
@@ -332,13 +349,18 @@ const submitPassword = async () => {
     }
 }
 
-onMounted(
-    async() => {
-        if(!userInfo.value){
-            await authStore.fetchUserInfo()
-        }
+const fetchUserInfo = async() => {
+    isLoading.value = true
+    error.value = null
+    try {
+        await authStore.fetchUserInfo()
+    } catch (e) {
+        error.value = '사용자 정보를 불러오지 못했습니다.'
+        console.error(e)
+    } finally {
+        isLoading.value = false
     }
-)
+}
 
 watch(
     userInfo,

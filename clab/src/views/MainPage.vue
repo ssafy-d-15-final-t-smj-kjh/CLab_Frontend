@@ -22,7 +22,7 @@
 
                 <div class="hero-image">
                     <div class="crab-circle">
-                        <img src="../assets/imgs/AB6AXU_1.PNG"/>
+                        <img src="../assets/imgs/CrabIcon.PNG"/>
                     </div>
                 </div>
             </section>
@@ -48,7 +48,6 @@
                         </div>
                         <h3 class="feature-name">{{ feature.name }}</h3>
                         <p class="feature-desc">{{ feature.desc }}</p>
-                        <a href="#" class="feature-link">분석 시작하기 →</a>
                     </div>
                 </div>
             </section>
@@ -59,10 +58,11 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router';
 
+const router = useRouter()
 const goAnalyze = () => {
-    // 분석 페이지 라우트 추가 시 연결
-    console.log('대화 분석 시작!')
+    router.push('/upload-chat')
 }
 
 const features = ref([

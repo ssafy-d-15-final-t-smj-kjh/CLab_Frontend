@@ -3,7 +3,7 @@
 
         <!-- 헤더 -->
         <header class="page-header">
-            <button class="back-btn" @click="router.push('/chat')">
+            <button class="back-btn" @click="router.push('/chat-list')">
                 <span class="back-icon">←</span>
             </button>
             <h1 class="page-title">💬 대화 상세</h1>
@@ -58,7 +58,7 @@
                                 <span class="label-icon">📅</span>
                                 등록일
                             </span>
-                            <span class="info-value">{{ formatDate(chatInfo.createdAt) }}</span>
+                            <span class="info-value">{{ formatTime(chatInfo.createdAt) }}</span>
                         </div>
 
                         <div class="info-item">
@@ -66,15 +66,7 @@
                                 <span class="label-icon">✏️</span>
                                 수정일
                             </span>
-                            <span class="info-value">{{ formatDate(chatInfo.updatedAt) }}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="info-label">
-                                <span class="label-icon">🆔</span>
-                                대화 ID
-                            </span>
-                            <span class="info-value info-value--id"># {{ chatInfo.id }}</span>
+                            <span class="info-value">{{ formatTime(chatInfo.updatedAt) }}</span>
                         </div>
                     </div>
                 </div>
@@ -94,11 +86,17 @@
 
                 <!-- 하단 버튼 -->
                 <div class="button-group">
-                    <button class="btn-secondary" @click="router.push('/chat-list')">
-                        ← 목록으로
+                    <button class="btn-white" @click="goToChatList">
+                        ← 목록
                     </button>
-                    <button class="btn-primary" @click="router.push(`/chat/${chatInfo.id}/conversation`)">
-                        💬 대화 이어가기
+                    <button class="btn-participant" @click="goToParticipantList">
+                        👥 참여자 목록
+                    </button>
+                    <button class="btn-red" @click="goToDeleteChat">
+                        ❌ 삭제하기
+                    </button>
+                    <button class="btn-blue" @click="goToEditChat">
+                        ✏️ 수정하기
                     </button>
                 </div>
 
@@ -123,6 +121,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useChatStore } from '@/stores/chat'
+import api from '@/api/axios'
 
 const router = useRouter()
 const route = useRoute()
@@ -130,28 +129,48 @@ const chatStore = useChatStore()
 const { chatInfo } = storeToRefs(chatStore)
 
 const isLoading = ref(false)
+const chatId = route.params.id
 
 // ── 날짜 포맷 ────────────────────────────────────────────
-const formatDate = (dateStr) => {
+const formatTime = (dateStr) => {
     if (!dateStr) return '-'
+
     const date = new Date(dateStr)
-    return date.toLocaleDateString('ko-KR', {
+
+    return date.toLocaleString('ko-KR', {
         year: 'numeric',
         month: '2-digit',
-        day: '2-digit'
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        // second: '2-digit',
+        hour12: true
     })
 }
+const goToChatList = () => router.push(`/chat-list`)
+const goToParticipantList = () => router.push(`/chat/${chatId}/participant-list`)
+const goToEditChat = () => router.push(`/edit-chat/${chatId}`)
+const goToDeleteChat = async() => {
+    const confirmed = confirm('정말 삭제하시겠습니까?')
+    if (!confirmed) return
 
+    try {
+        await api.delete(`/chat/${chatId}`)
+        alert('대화를 삭제하였습니다.')
+        router.push('/chat-list')
+    } catch (e) {
+        console.error(e)
+        const msg = e.response?.data?.message || '삭제 중 오류가 발생했습니다.'
+        alert(msg)
+    }
+}
 // ── 마운트 시 데이터 fetch ────────────────────────────────
 onMounted(async () => {
-    const id = route.params.id
-
-    // 이미 같은 id의 데이터가 store에 있으면 재요청 생략
-    if (chatInfo.value && String(chatInfo.value.id) === String(id)) return
 
     isLoading.value = true
+    
     try {
-        await chatStore.fetchChatInfo(id)
+        await chatStore.fetchChatInfo(chatId)
     } catch (e) {
         console.error(e)
     } finally {
@@ -409,7 +428,7 @@ onMounted(async () => {
     gap: 12px;
 }
 
-.btn-secondary {
+.btn-white {
     flex: 1;
     padding: 14px;
     border: 1.5px solid var(--sand-dark);
@@ -422,13 +441,64 @@ onMounted(async () => {
     transition: background 0.2s, border-color 0.2s;
 }
 
-.btn-secondary:hover {
+.btn-white:hover {
     background: var(--sand);
     border-color: var(--ocean-blue);
     color: var(--text-dark);
 }
 
-.btn-primary {
+.btn-participant {
+    padding: 12px 20px;
+    border: 1.5px solid var(--ocean-blue, #5bb4c4);
+    border-radius: 14px;
+    background: var(--white, #ffffff);
+    color: var(--ocean-blue, #5bb4c4);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+
+.btn-participant:hover {
+    background: var(--ocean-blue, #5bb4c4);
+    color: var(--white, #ffffff);
+}
+
+.btn-participant:active {
+    transform: scale(0.98);
+}
+
+.btn-red {
+    flex: 2;
+    padding: 14px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--crab-red), var(--crab-orange));
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(91, 180, 196, 0.35);
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-red:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.btn-red:active {
+    transform: translateY(0);
+}
+
+.btn-blue {
     flex: 2;
     padding: 14px;
     border: none;
@@ -446,12 +516,12 @@ onMounted(async () => {
     transition: opacity 0.2s, transform 0.1s;
 }
 
-.btn-primary:hover {
+.btn-blue:hover {
     opacity: 0.9;
     transform: translateY(-1px);
 }
 
-.btn-primary:active {
+.btn-blue:active {
     transform: translateY(0);
 }
 
