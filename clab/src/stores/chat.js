@@ -16,9 +16,9 @@ export const useChatStore = defineStore("chat", () => {
         }
     }
 
-    const fetchChatInfo = async (id) => {
+    const fetchChatInfo = async (chatId) => {
         try {
-            const response = await api.get(`/chat/${id}`)
+            const response = await api.get(`/chat/${chatId}`)
             const apiResponse = response.data
             chatInfo.value = apiResponse.data
         } catch (error) {
