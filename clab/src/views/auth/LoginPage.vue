@@ -1,4 +1,6 @@
 <template>
+    <LoadingInfo v-if="isLoading" :is-loading="isLoading"/>
+    <RetryInfo v-else-if="error" :message="error" @retry="handleLogin"/>
     <div class="login-wrapper">
         <div class="bubble bubble1"></div>
         <div class="bubble bubble2"></div>
@@ -56,14 +58,22 @@ import { useRouter } from 'vue-router'
 import api from '@/api/axios'
 import { useAuthStore } from '@/stores/auth'
 
+import LoadingInfo from '@/components/LoadingInfo.vue'
+import RetryInfo from '@/components/RetryInfo.vue'
+
 const router = useRouter()
 const authStore = useAuthStore();
+
+const isLoading = ref(false)
+const error = ref(null)
 
 const email = ref('')
 const password = ref('')
 const showError = ref(false)
 
 const handleLogin = async () => {
+    isLoading.value = true
+    error.value = null
     try {
         const response = await api.post('/auth/login',
             {
@@ -83,14 +93,16 @@ const handleLogin = async () => {
         } else {
             alert(apiResponse.message);
         }
-    } catch (error) {
-        console.error('API 호출 에러:', error);
-        if (error.response && error.response.data) {
-            const errorData = error.response.data;
+    } catch (e) {
+        console.error('API 호출 에러:', e);
+        if (e.response && e.response.data) {
+            const errorData = e.response.data;
             alert(`[${errorData.code}] ${errorData.message}`);
         } else {
             alert('로그인에 실패했습니다. 입력 정보를 확인해주세요.');
         }
+    } finally {
+        isLoading.value = false
     }
 }
 

@@ -1,92 +1,162 @@
 <template>
-    <div class="page-container">
+    <div class="list-page">
         <!-- 헤더 -->
-        <div class="header">
-            <button class="back-btn" @click="goBack">
-                <span>←</span>
-            </button>
-            <h1 class="header-title">참여자 분석</h1>
+        <div class="page-header">
+            <div class="header-inner">
+                <button class="back-btn" @click="goBack">
+                    <span>←</span>
+                </button>
+                <div class="header-title">
+                    <h1>🦀 대화 참여자 분석</h1>
+                </div>
+            </div>
         </div>
-
+        
         <LoadingInfo v-if="isLoading" :is-loading="isLoading" />
         <RetryInfo v-else-if="error" :message="error" @retry="fetchParticipants" />
-
-        <!-- 참여자 리스트 -->
-        <div v-else class="content-wrap">
-            <!-- 요약 카드 -->
-            <div class="summary-card">
-                <div class="summary-item">
-                    <span class="summary-label">총 참여자</span>
-                    <span class="summary-value">{{ participants.length }}명</span>
+        <div class="container" v-else>
+            <p class="chat-title">{{ chatInfo?.title }}</p>
+            <!-- 통계 요약 카드 -->
+            <div class="summary-section">
+                <div class="summary-card">
+                    <span class="summary-icon">💬</span>
+                    <div>
+                        <p class="summary-label">총 대화 수</p>
+                        <p class="summary-value">{{ totalMessages }}</p>
+                    </div>
                 </div>
-                <div class="divider-v"></div>
-                <div class="summary-item">
-                    <span class="summary-label">총 대화수</span>
-                    <span class="summary-value">{{ totalCount }}회</span>
+                <div class="summary-card">
+                    <span class="summary-icon">👥</span>
+                    <div>
+                        <p class="summary-label">참여자 수</p>
+                        <p class="summary-value">{{ participants.length }}명</p>
+                    </div>
                 </div>
-                <div class="divider-v"></div>
-                <div class="summary-item">
-                    <span class="summary-label">최고 점수</span>
-                    <span class="summary-value">{{ maxScore }}점</span>
+                <div class="summary-card">
+                    <span class="summary-icon">⏱️</span>
+                    <div>
+                        <p class="summary-label">평균 답장시간</p>
+                        <p class="summary-value">{{ avgReplyTime }}</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- 정렬 옵션 -->
-            <div class="sort-wrap">
-                <span class="sort-label">정렬</span>
-                <div class="sort-buttons">
-                    <button v-for="opt in sortOptions" :key="opt.value"
-                        :class="['sort-btn', { active: sortBy === opt.value }]" @click="setSortBy(opt.value)">
-                        {{ opt.label }}
+            <!-- 순위 & 참여자 카드 -->
+            <div class="section">
+                <h2 class="section-title">🏆 참여자 순위</h2>
+                <p class="section-desc">대화 참여도 기준 순위입니다</p>
+
+                <div class="participant-cards">
+                    <div v-for="(p, index) in rankedParticipants" :key="p.id" class="participant-card"
+                        :class="{ 'rank-1': index === 0, 'rank-2': index === 1, 'rank-3': index === 2 }"
+                        @click="goToDetail(p.id)">
+                        <!-- 순위 배지 -->
+                        <div class="rank-badge">
+                            <span v-if="index === 0">🥇</span>
+                            <span v-else-if="index === 1">🥈</span>
+                            <span v-else-if="index === 2">🥉</span>
+                            <span v-else class="rank-num">{{ index + 1 }}</span>
+                        </div>
+
+                        <!-- 참여자 아바타 -->
+                        <div class="avatar" :style="{ backgroundColor: avatarColors[index % avatarColors.length] }">
+                            {{ p.name }}
+                        </div>
+
+                        <!-- 참여자 정보 -->
+                        <div class="card-info">
+                            <h3 class="participant-name">{{ p.name }}</h3>
+
+                            <!-- 스탯 그리드 -->
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <span class="stat-label">💬 대화 수</span>
+                                    <span class="stat-value">{{ p.count }}회</span>
+                                    <div class="stat-bar">
+                                        <div class="stat-bar-fill"
+                                            :style="{ width: getPercent(p.count, maxCount) + '%', backgroundColor: '#5bb4c4' }">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="stat-item">
+                                    <span class="stat-label">⏱️ 평균 답장</span>
+                                    <span class="stat-value">{{ formatReplyTime(p.averageReplyTime) }}</span>
+                                    <div class="stat-bar">
+                                        <div class="stat-bar-fill"
+                                            :style="{ width: getReplyPercent(p.averageReplyTime) + '%', backgroundColor: '#a8dadc' }">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="stat-item">
+                                    <span class="stat-label">📝 대화 길이</span>
+                                    <span class="stat-value">{{ p.chatLength }}자</span>
+                                    <div class="stat-bar">
+                                        <div class="stat-bar-fill"
+                                            :style="{ width: getPercent(p.chatLength, maxLength) + '%', backgroundColor: '#e8554e' }">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="stat-item">
+                                    <span class="stat-label">⚡ 테토 점수</span>
+                                    <span class="stat-value teto-score" :class="tetoClass(p.tetoScore)">
+                                        {{ p.tetoScore ?? '-' }}점
+                                    </span>
+                                    <div class="stat-bar">
+                                        <div class="stat-bar-fill teto-bar" :style="{
+                                            width: (p.tetoScore ?? 0) + '%',
+                                            background: tetoGradient(p.tetoScore)
+                                        }"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 화살표 -->
+                        <div class="card-arrow">→</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 비교 차트 섹션 -->
+            <div class="section">
+                <h2 class="section-title">📊 참여자 비교 차트</h2>
+
+                <!-- 차트 탭 -->
+                <div class="chart-tabs">
+                    <button v-for="tab in chartTabs" :key="tab.key" class="chart-tab"
+                        :class="{ active: activeChart === tab.key }" @click="activeChart = tab.key">
+                        {{ tab.label }}
                     </button>
                 </div>
+
+                <div class="chart-wrapper">
+                    <canvas ref="barChartRef"></canvas>
+                </div>
             </div>
 
-            <!-- 참여자 카드 리스트 -->
-            <div class="participant-list">
-                <div v-for="(participant, index) in sortedParticipants" :key="participant.id" class="participant-card"
-                    @click="goToDetail(participant.id)">
-                    <!-- 순위 -->
-                    <div :class="['rank-badge', getRankClass(index + 1)]">
-                        {{ index + 1 }}
-                    </div>
+            <!-- 테토 점수 분포 -->
+            <div class="section">
+                <h2 class="section-title">⚡ 테토 에너지 분포</h2>
+                <p class="section-desc">0점 = 여성적(에테르), 100점 = 남성적(테토)</p>
 
-                    <!-- 참여자 정보 -->
-                    <div class="participant-info">
-                        <div class="participant-top">
-                            <span class="participant-name">
-                                {{ participant.alias || participant.name }}
-                            </span>
-                            <span v-if="participant.alias" class="original-name">
-                                ({{ participant.name }})
-                            </span>
-                        </div>
-                        <div class="participant-stats">
-                            <span class="stat-item">
-                                <span class="stat-icon">💬</span>
-                                {{ participant.count }}회
-                            </span>
-                            <span class="stat-item">
-                                <span class="stat-icon">⏱️</span>
-                                {{ formatTime(participant.average_reply_time) }}
-                            </span>
-                            <span class="stat-item">
-                                <span class="stat-icon">📝</span>
-                                {{ participant.chat_length }}자
-                            </span>
+                <div class="teto-distribution">
+                    <div v-for="p in participants" :key="p.id" class="teto-item" @click="goToDetail(p.id)">
+                        <span class="teto-name">{{ p.name }}</span>
+                        <div class="teto-bar-container">
+                            <div class="teto-label-left">에테르</div>
+                            <div class="teto-full-bar">
+                                <div class="teto-fill" :style="{
+                                    width: (p.tetoScore ?? 0) + '%',
+                                    background: tetoGradient(p.persona?.teto_score)
+                                }"></div>
+                                <span class="teto-score-label">{{ p.tetoScore ?? 0 }}점</span>
+                            </div>
+                            <div class="teto-label-right">테토</div>
                         </div>
                     </div>
-
-                    <!-- 점수 -->
-                    <div class="score-wrap">
-                        <div class="score-circle">
-                            <span class="score-value">{{ participant.score }}</span>
-                            <span class="score-label">점</span>
-                        </div>
-                    </div>
-
-                    <!-- 화살표 -->
-                    <div class="arrow">→</div>
                 </div>
             </div>
         </div>
@@ -94,271 +164,334 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useParticipantStore } from '@/stores/participant'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { Chart, registerables } from 'chart.js'
 import { storeToRefs } from 'pinia'
+
+import { useChatStore } from '@/stores/chat'
+import { useParticipantStore } from '@/stores/participant'
 
 import LoadingInfo from '@/components/LoadingInfo.vue'
 import RetryInfo from '@/components/RetryInfo.vue'
 
+Chart.register(...registerables)
+
 const route = useRoute()
 const router = useRouter()
+
+const chatStore = useChatStore()
 const participantStore = useParticipantStore()
 
-const chatId = route.params.chatId
-const { participants } = storeToRefs(participantStore)
 const isLoading = ref(false)
 const error = ref(null)
-const sortBy = ref('score')
 
-const sortOptions = [
-    { label: '점수순', value: 'score' },
-    { label: '대화수', value: 'count' },
-    { label: '대화길이', value: 'chat_length' },
-    { label: '답장시간', value: 'average_reply_time' },
+const { chatInfo } = storeToRefs(chatStore)
+const { participants } = storeToRefs(participantStore)
+
+const chatId = route.params.chatId
+const barChartRef = ref(null)
+let barChartInstance = null
+
+const activeChart = ref('count')
+const chartTabs = [
+    { key: 'count', label: '💬 대화 수' },
+    { key: 'reply', label: '⏱️ 답장 시간' },
+    { key: 'length', label: '📝 대화 길이' },
+    { key: 'teto', label: '⚡ 테토 점수' },
 ]
 
-// 정렬된 참여자 목록
-const sortedParticipants = computed(() => {
-    return [...participants.value].sort((a, b) => {
-        if (sortBy.value === 'average_reply_time') {
-            return a[sortBy.value] - b[sortBy.value] // 답장시간은 오름차순
-        }
-        return b[sortBy.value] - a[sortBy.value] // 나머지는 내림차순
-    })
+const avatarColors = ['#5bb4c4', '#e8554e', '#f0d9a8', '#a8dadc', '#c41e3a', '#88bbcc']
+
+// ── 계산값 ──────────────────────────────────────────
+const totalMessages = computed(() =>
+    participants.value.reduce((sum, p) => sum + p.count, 0)
+)
+
+const avgReplyTime = computed(() => {
+    const valid = participants.value.filter(p => p.averageReplyTime > 0)
+    if (!valid.length) return '-'
+    const avg = valid.reduce((s, p) => s + p.averageReplyTime, 0) / valid.length
+    return formatReplyTime(avg)
 })
 
-const totalCount = computed(() =>
-    participants.value.reduce((sum, p) => sum + (p.count || 0), 0)
+const rankedParticipants = computed(() =>
+    [...participants.value].sort((a, b) => b.count - a.count)
 )
 
-const maxScore = computed(() =>
-    participants.value.length > 0
-        ? Math.max(...participants.value.map((p) => p.score || 0))
-        : 0
-)
+const maxCount = computed(() => Math.max(...participants.value.map(p => p.count), 1))
+const maxLength = computed(() => Math.max(...participants.value.map(p => p.chatLength), 1))
+const maxReply = computed(() => Math.max(...participants.value.map(p => p.averageReplyTime), 1))
 
-// 참여자 목록 불러오기
-const fetchParticipants = async (chatId) => {
-    isLoading.value = true
-    error.value = null
-    try {
-        participantStore.fetchParticipants(chatId)
-    } catch (e) {
-        error.value = '참여자 정보를 불러오지 못했습니다.'
-        console.error(e)
-    } finally {
-        isLoading.value = false
-    }
+// ── 유틸 ────────────────────────────────────────────
+const getPercent = (val, max) => {
+    return max === 0 ? 0 : Math.round((val / max) * 100)
 }
 
-// 순위 스타일
-const getRankClass = (rank) => {
-    if (rank === 1) return 'gold'
-    if (rank === 2) return 'silver'
-    if (rank === 3) return 'bronze'
-    return 'default'
+
+const getReplyPercent = (val) => {
+    // 답장이 빠를수록 높은 점수로 변환
+    if (!val || val === 0) return 100
+    return Math.max(10, 100 - Math.round((val / maxReply.value) * 100))
 }
 
-// 시간 포맷 (초 → 분:초)
-const formatTime = (seconds) => {
-    if (!seconds && seconds !== 0) return '-'
-    if (seconds < 60) return `${seconds}초`
-    const m = Math.floor(seconds / 60)
-    const s = seconds % 60
-    return s > 0 ? `${m}분 ${s}초` : `${m}분`
+const formatReplyTime = (seconds) => {
+    if (!seconds || seconds === 0) return '즉시'
+    if (seconds < 60) return `${Math.round(seconds)}초`
+    if (seconds < 3600) return `${Math.round(seconds / 60)}분`
+    return `${Math.round(seconds / 3600)}시간`
 }
 
-const setSortBy = (value) => {
-    sortBy.value = value
+const tetoClass = (score) => {
+    if (score === null || score === undefined) return ''
+    if (score >= 70) return 'score-high'
+    if (score >= 40) return 'score-mid'
+    return 'score-low'
 }
 
-const goToDetail = (participantId) => {
-    router.push(`/chat/${chatId}/participant-detail/${participantId}`)
+const tetoGradient = (score) => {
+    if (!score) return 'linear-gradient(90deg, #a8dadc, #5bb4c4)'
+    if (score >= 70) return 'linear-gradient(90deg, #e8554e, #c41e3a)'
+    if (score >= 40) return 'linear-gradient(90deg, #f0d9a8, #e8554e)'
+    return 'linear-gradient(90deg, #a8dadc, #5bb4c4)'
 }
 
 const goBack = () => {
     router.push(`/chat-detail/${chatId}`)
 }
-
-onMounted(() => {
-    fetchParticipants(chatId)
-})
-</script>
-
-<style scoped>
-.page-container {
-    min-height: 100vh;
-    background: var(--sand-light);
-    padding-bottom: 40px;
+const goToDetail = (participantId) => {
+    router.push(`/chat/${chatId}/participant-detail/${participantId}`)
 }
 
-/* 헤더 */
-.header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 20px 20px 16px;
-    background: var(--white);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+// ── 차트 ────────────────────────────────────────────
+const buildChartData = () => {
+    const names = participants.value.map(p => p.name)
+
+    const datasets = {
+        count: {
+            label: '대화 수',
+            data: participants.value.map(p => p.count),
+            backgroundColor: '#5bb4c480',
+            borderColor: '#5bb4c4',
+            borderWidth: 2,
+        },
+        reply: {
+            label: '평균 답장 시간 (초)',
+            data: participants.value.map(p => p.averageReplyTime ?? 0),
+            backgroundColor: '#a8dadc80',
+            borderColor: '#a8dadc',
+            borderWidth: 2,
+        },
+        length: {
+            label: '대화 길이 (자)',
+            data: participants.value.map(p => p.chatLength),
+            backgroundColor: '#e8554e80',
+            borderColor: '#e8554e',
+            borderWidth: 2,
+        },
+        teto: {
+            label: '테토 점수',
+            data: participants.value.map(p => p.tetoScore ?? 0),
+            backgroundColor: participants.value.map(p =>
+                (p.persona?.teto_score ?? 0) >= 70
+                    ? '#c41e3a80'
+                    : (p.persona?.teto_score ?? 0) >= 40
+                        ? '#e8554e80'
+                        : '#a8dadc80'
+            ),
+            borderColor: '#c41e3a',
+            borderWidth: 2,
+        },
+    }
+
+    return { names, dataset: datasets[activeChart.value] }
 }
 
-.back-btn {
-    width: 36px;
-    height: 36px;
-    border: none;
-    background: var(--sand);
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
+async function renderChart() {
+    await nextTick()
+    if (!barChartRef.value) return
+
+    if (barChartInstance) {
+        barChartInstance.destroy()
+    }
+
+    const { names, dataset } = buildChartData()
+
+    barChartInstance = new Chart(barChartRef.value, {
+        type: 'bar',
+        data: {
+            labels: names,
+            datasets: [dataset],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#3a3a3a',
+                    titleColor: '#fdf6e8',
+                    bodyColor: '#fdf6e8',
+                },
+            },
+            scales: {
+                x: {
+                    grid: { color: '#f0d9a830' },
+                    ticks: { color: '#3a3a3a', font: { size: 13 } },
+                },
+                y: {
+                    grid: { color: '#f0d9a830' },
+                    ticks: { color: '#3a3a3a' },
+                    beginAtZero: true,
+                },
+            },
+        },
+    })
 }
 
-.back-btn:hover {
-    background: var(--sand-dark);
-}
+watch(activeChart, renderChart)
 
-.header-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-dark);
-}
-
-/* 로딩 */
-.loading-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 80px 20px;
-    gap: 16px;
-    color: var(--text-gray);
-}
-
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid var(--sand-dark);
-    border-top-color: var(--ocean-blue);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
+// ── API 호출 ─────────────────────────────────────────
+const fetchData = async () => {
+    isLoading.value = true
+    error.value = null
+    try {
+        await fetchChatInfo()
+        await fetchParticipants()
+    } catch (e) {
+        console.error(e)
+        error.value = '정보를 불러오는 데 실패하였습니다.'
+    } finally {
+        isLoading.value = false
+        await renderChart()
     }
 }
 
-/* 에러 */
-.error-wrap {
+const fetchChatInfo = async () => {
+    await chatStore.fetchChatInfo(chatId)
+}
+const fetchParticipants = async () => {
+    await participantStore.fetchParticipants(chatId)
+}
+
+onMounted(fetchData)
+</script>
+
+<style scoped>
+.list-page {
+    min-height: 100vh;
+    background: var(--sand-light);
+    font-family: 'Pretendard', sans-serif;
+}
+
+/* ── 헤더 ── */
+.page-header {
+    background: linear-gradient(135deg, var(--ocean-blue), var(--sky-blue));
+    padding: 20px 24px 24px;
+    color: var(--white);
+}
+
+.header-inner {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    padding: 60px 20px;
     gap: 16px;
-    color: var(--crab-red);
+    max-width: 900px;
+    margin: 0 auto;
 }
 
-.retry-btn {
-    padding: 10px 24px;
-    background: var(--ocean-blue);
-    color: white;
+.back-btn {
+    background: rgba(255, 255, 255, 0.2);
     border: none;
-    border-radius: 20px;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 18px;
     cursor: pointer;
-    font-size: 14px;
-}
-
-/* 콘텐츠 */
-.content-wrap {
-    padding: 20px 16px;
+    transition: background 0.2s;
     display: flex;
-    flex-direction: column;
-    gap: 16px;
+    align-items: center;
+    justify-content: center;
 }
 
-/* 요약 카드 */
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.header-title h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.chat-title {
+    margin: 4px 0 0;
+    font-size: 14px;
+    opacity: 0.85;
+}
+
+/* ── 컨테이너 ── */
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 20px;
+}
+
+/* ── 요약 카드 ── */
+.summary-section {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
 .summary-card {
     background: var(--white);
     border-radius: 16px;
-    padding: 20px;
+    padding: 16px;
     display: flex;
     align-items: center;
-    justify-content: space-around;
+    gap: 12px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
-.summary-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
+.summary-icon {
+    font-size: 28px;
 }
 
 .summary-label {
+    margin: 0;
     font-size: 12px;
     color: var(--text-gray);
 }
 
 .summary-value {
+    margin: 2px 0 0;
     font-size: 20px;
     font-weight: 700;
-    color: var(--ocean-blue);
+    color: var(--text-dark);
 }
 
-.divider-v {
-    width: 1px;
-    height: 40px;
-    background: var(--sand-dark);
+/* ── 섹션 ── */
+.section {
+    margin-bottom: 36px;
 }
 
-/* 정렬 */
-.sort-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 4px;
 }
 
-.sort-label {
+.section-desc {
     font-size: 13px;
     color: var(--text-gray);
-    white-space: nowrap;
+    margin: 0 0 16px;
 }
 
-.sort-buttons {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.sort-btn {
-    padding: 6px 14px;
-    border: 1.5px solid var(--sand-dark);
-    background: var(--white);
-    border-radius: 20px;
-    font-size: 13px;
-    cursor: pointer;
-    color: var(--text-gray);
-    transition: all 0.2s;
-}
-
-.sort-btn.active {
-    background: var(--ocean-blue);
-    border-color: var(--ocean-blue);
-    color: var(--white);
-    font-weight: 600;
-}
-
-/* 참여자 카드 */
-.participant-list {
+/* ── 참여자 카드 ── */
+.participant-cards {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -366,132 +499,259 @@ onMounted(() => {
 
 .participant-card {
     background: var(--white);
-    border-radius: 16px;
-    padding: 16px;
+    border-radius: 20px;
+    padding: 20px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    gap: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 2px solid transparent;
 }
 
 .participant-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    border-color: var(--sky-blue);
 }
 
-.participant-card:active {
-    transform: translateY(0);
+.participant-card.rank-1 {
+    border-color: #ffd700;
+    background: linear-gradient(135deg, #fffef0, var(--white));
 }
 
-/* 순위 배지 */
+.participant-card.rank-2 {
+    border-color: #c0c0c0;
+}
+
+.participant-card.rank-3 {
+    border-color: #cd7f32;
+}
+
 .rank-badge {
-    width: 32px;
-    height: 32px;
+    font-size: 28px;
+    min-width: 36px;
+    text-align: center;
+}
+
+.rank-num {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-gray);
+}
+
+.avatar {
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 22px;
     font-weight: 700;
+    color: var(--white);
     flex-shrink: 0;
 }
 
-.rank-badge.gold {
-    background: #ffd700;
-    color: #7a5c00;
-}
-
-.rank-badge.silver {
-    background: #c0c0c0;
-    color: #555;
-}
-
-.rank-badge.bronze {
-    background: #cd7f32;
-    color: var(--white);
-}
-
-.rank-badge.default {
-    background: var(--sand);
-    color: var(--text-gray);
-}
-
-/* 참여자 정보 */
-.participant-info {
+.card-info {
     flex: 1;
-    min-width: 0;
-}
-
-.participant-top {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-    margin-bottom: 6px;
 }
 
 .participant-name {
-    font-size: 15px;
+    margin: 0 0 12px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text-dark);
 }
 
-.original-name {
-    font-size: 12px;
-    color: var(--text-gray);
-}
-
-.participant-stats {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
 }
 
 .stat-item {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 3px;
-    font-size: 12px;
+}
+
+.stat-label {
+    font-size: 11px;
     color: var(--text-gray);
 }
 
-.stat-icon {
-    font-size: 11px;
+.stat-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dark);
 }
 
-/* 점수 */
-.score-wrap {
+.teto-score.score-high {
+    color: var(--crab-red);
+}
+
+.teto-score.score-mid {
+    color: var(--crab-orange);
+}
+
+.teto-score.score-low {
+    color: var(--ocean-blue);
+}
+
+.stat-bar {
+    height: 4px;
+    background: var(--sand);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.stat-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s ease;
+}
+
+.card-arrow {
+    font-size: 20px;
+    color: var(--text-gray);
     flex-shrink: 0;
 }
 
-.score-circle {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--sky-blue), var(--ocean-blue));
+/* ── 차트 ── */
+.chart-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.chart-tab {
+    padding: 8px 16px;
+    border: 2px solid var(--sand-dark);
+    border-radius: 20px;
+    background: var(--white);
+    color: var(--text-dark);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chart-tab.active {
+    background: var(--ocean-blue);
+    border-color: var(--ocean-blue);
+    color: var(--white);
+    font-weight: 600;
+}
+
+.chart-wrapper {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 24px;
+    height: 280px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* ── 테토 분포 ── */
+.teto-distribution {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.teto-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.teto-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    min-width: 60px;
+}
+
+.teto-bar-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.teto-label-left,
+.teto-label-right {
+    font-size: 11px;
+    color: var(--text-gray);
+    white-space: nowrap;
+}
+
+.teto-full-bar {
+    flex: 1;
+    height: 20px;
+    background: var(--sand);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.teto-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 1s ease;
+}
+
+.teto-score-label {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+/* ── 로딩 ── */
+.loading-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(91, 180, 196, 0.4);
+    min-height: 60vh;
+    gap: 16px;
 }
 
-.score-value {
-    font-size: 16px;
-    font-weight: 800;
-    color: var(--white);
-    line-height: 1;
+.loading-crab {
+    font-size: 48px;
+    animation: bounce 1s infinite;
 }
 
-.score-label {
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.85);
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-12px);
+    }
 }
 
-.arrow {
-    font-size: 16px;
-    color: var(--text-gray);
-    flex-shrink: 0;
+/* ── 반응형 ── */
+@media (max-width: 600px) {
+    .summary-section {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-wrapper {
+        height: 220px;
+    }
 }
 </style>

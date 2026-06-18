@@ -1,6 +1,7 @@
 <template>
-    <div class="chat-detail-page">
-
+    <LoadingInfo v-if="isLoading" :is-loading="isLoading" />
+    <RetryInfo v-else-if="error" :message="error" @retry="fetchChatInfo" />
+    <div class="chat-detail-page" v-else>
         <!-- 헤더 -->
         <header class="page-header">
             <button class="back-btn" @click="router.push('/chat-list')">
@@ -12,106 +13,85 @@
 
         <div class="content-wrapper">
 
-            <!-- 로딩 중 -->
-            <div v-if="isLoading" class="loading-state">
-                <span class="loading-icon">🦀</span>
-                <p class="loading-text">데이터를 불러오는 중입니다...</p>
+            <!-- 타이틀 배너 -->
+            <div class="title-banner">
+                <div class="banner-icon">💬</div>
+                <div class="banner-text">
+                    <h2 class="banner-title">{{ chatInfo?.title }}</h2>
+                    <p class="banner-sub">{{ chatInfo?.content }}</p>
+                </div>
             </div>
 
-            <template v-else-if="chatInfo">
+            <!-- 상세 정보 카드 -->
+            <div class="section-card">
+                <h3 class="section-title">
+                    <span class="section-icon">📋</span>
+                    대화 정보
+                </h3>
 
-                <!-- 타이틀 배너 -->
-                <div class="title-banner">
-                    <div class="banner-icon">💬</div>
-                    <div class="banner-text">
-                        <h2 class="banner-title">{{ chatInfo.title }}</h2>
-                        <p class="banner-sub">{{ chatInfo.description }}</p>
+                <div class="info-list">
+                    <div class="info-item">
+                        <span class="info-label">
+                            <span class="label-icon">📌</span>
+                            제목
+                        </span>
+                        <span class="info-value">{{ chatInfo.title }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">
+                            <span class="label-icon">📝</span>
+                            설명
+                        </span>
+                        <span class="info-value">{{ chatInfo.content }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">
+                            <span class="label-icon">📅</span>
+                            등록일
+                        </span>
+                        <span class="info-value">{{ formatTime(chatInfo.createdAt) }}</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">
+                            <span class="label-icon">✏️</span>
+                            수정일
+                        </span>
+                        <span class="info-value">{{ formatTime(chatInfo.updatedAt) }}</span>
                     </div>
                 </div>
+            </div>
 
-                <!-- 상세 정보 카드 -->
-                <div class="section-card">
-                    <h3 class="section-title">
-                        <span class="section-icon">📋</span>
-                        대화 정보
-                    </h3>
-
-                    <div class="info-list">
-                        <div class="info-item">
-                            <span class="info-label">
-                                <span class="label-icon">📌</span>
-                                제목
-                            </span>
-                            <span class="info-value">{{ chatInfo.title }}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="info-label">
-                                <span class="label-icon">📝</span>
-                                설명
-                            </span>
-                            <span class="info-value">{{ chatInfo.description }}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="info-label">
-                                <span class="label-icon">📅</span>
-                                등록일
-                            </span>
-                            <span class="info-value">{{ formatTime(chatInfo.createdAt) }}</span>
-                        </div>
-
-                        <div class="info-item">
-                            <span class="info-label">
-                                <span class="label-icon">✏️</span>
-                                수정일
-                            </span>
-                            <span class="info-value">{{ formatTime(chatInfo.updatedAt) }}</span>
-                        </div>
-                    </div>
+            <!-- 대화 내용 카드 -->
+            <div class="section-card">
+                <h3 class="section-title">
+                    <span class="section-icon">🌊</span>
+                    대화 내용
+                </h3>
+                <div class="chat-content-area">
+                    <p class="chat-content-text">
+                        {{ chatInfo.content ?? '대화 내용이 없습니다.' }}
+                    </p>
                 </div>
+            </div>
 
-                <!-- 대화 내용 카드 -->
-                <div class="section-card">
-                    <h3 class="section-title">
-                        <span class="section-icon">🌊</span>
-                        대화 내용
-                    </h3>
-                    <div class="chat-content-area">
-                        <p class="chat-content-text">
-                            {{ chatInfo.content ?? '대화 내용이 없습니다.' }}
-                        </p>
-                    </div>
-                </div>
-
-                <!-- 하단 버튼 -->
-                <div class="button-group">
-                    <button class="btn-white" @click="goToChatList">
-                        ← 목록
-                    </button>
-                    <button class="btn-participant" @click="goToParticipantList">
-                        👥 참여자 목록
-                    </button>
-                    <button class="btn-red" @click="goToDeleteChat">
-                        ❌ 삭제하기
-                    </button>
-                    <button class="btn-blue" @click="goToEditChat">
-                        ✏️ 수정하기
-                    </button>
-                </div>
-
-            </template>
-
-            <!-- 데이터 없음 -->
-            <div v-else class="empty-state">
-                <span class="empty-icon">🌊</span>
-                <p class="empty-title">대화를 찾을 수 없어요</p>
-                <p class="empty-sub">삭제되었거나 존재하지 않는 대화입니다.</p>
-                <button class="btn-primary" style="margin-top: 20px;" @click="router.push('/chat')">
-                    목록으로 돌아가기
+            <!-- 하단 버튼 -->
+            <div class="button-group">
+                <button class="btn-white" @click="goToChatList">
+                    ← 목록
+                </button>
+                <button class="btn-participant" @click="goToParticipantList">
+                    👥 참여자 목록
+                </button>
+                <button class="btn-red" @click="goToDeleteChat">
+                    ❌ 삭제하기
+                </button>
+                <button class="btn-blue" @click="goToEditChat">
+                    ✏️ 수정하기
                 </button>
             </div>
-
         </div>
     </div>
 </template>
@@ -123,12 +103,16 @@ import { storeToRefs } from 'pinia'
 import { useChatStore } from '@/stores/chat'
 import api from '@/api/axios'
 
+import LoadingInfo from '@/components/LoadingInfo.vue'
+import RetryInfo from '@/components/RetryInfo.vue'
+
 const router = useRouter()
 const route = useRoute()
 const chatStore = useChatStore()
 const { chatInfo } = storeToRefs(chatStore)
 
-const isLoading = ref(false)
+const isLoading = ref(true)
+const error = ref(null)
 const chatId = route.params.id
 
 // ── 날짜 포맷 ────────────────────────────────────────────
@@ -150,32 +134,40 @@ const formatTime = (dateStr) => {
 const goToChatList = () => router.push(`/chat-list`)
 const goToParticipantList = () => router.push(`/chat/${chatId}/participant-list`)
 const goToEditChat = () => router.push(`/edit-chat/${chatId}`)
-const goToDeleteChat = async() => {
+const goToDeleteChat = async () => {
     const confirmed = confirm('정말 삭제하시겠습니까?')
     if (!confirmed) return
 
+    isLoading.value = true
+    error.value = null
     try {
         await api.delete(`/chat/${chatId}`)
         alert('대화를 삭제하였습니다.')
         router.push('/chat-list')
     } catch (e) {
         console.error(e)
-        const msg = e.response?.data?.message || '삭제 중 오류가 발생했습니다.'
-        alert(msg)
+        error.value = e.response?.data?.message || '삭제 중 오류가 발생했습니다.'
+        alert(error.value)
+    } finally {
+        isLoading.value = false
     }
 }
-// ── 마운트 시 데이터 fetch ────────────────────────────────
-onMounted(async () => {
-
+const fetchChatInfo = async () => {
     isLoading.value = true
-    
+    error.value = null
+
     try {
         await chatStore.fetchChatInfo(chatId)
     } catch (e) {
         console.error(e)
+        error.value = '정보를 불러오는 데 실패했습니다.'
     } finally {
         isLoading.value = false
     }
+}
+// ── 마운트 시 데이터 fetch ────────────────────────────────
+onMounted(async () => {
+    await fetchChatInfo()
 })
 </script>
 

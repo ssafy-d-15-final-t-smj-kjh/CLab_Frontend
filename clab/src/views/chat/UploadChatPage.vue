@@ -281,16 +281,12 @@ const handleSubmit = async () => {
     isLoading.value = true
 
     try {
-        const now = new Date().toISOString()
         const formData = new FormData()
 
         formData.append('file', uploadedFile.value)
 
         const chatDto = {
             userId: userInfo.value?.id ?? 0,
-            createdAt: now,
-            updatedAt: now,
-            source: selectedCategory.value,
             title: form.title.trim(),
             content: form.content.trim()
         }
