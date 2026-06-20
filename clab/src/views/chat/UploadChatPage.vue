@@ -177,10 +177,10 @@ import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
-import api from '@/api/axios'
 
 import AnticipatedTimeModal from '@/components/AnticipatedTimeModal.vue'
 import AnalysisLoading from '@/components/AnalysisLoading.vue'
+import { chatApi } from '@/api/restApi'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -328,7 +328,7 @@ const executeUpload = async () => {
         const jsonBlob = new Blob([JSON.stringify(chatDto)], { type: 'application/json' })
         formData.append('dto', jsonBlob)
 
-        const response = await api.post('/chat', formData)
+        const response = await chatApi.uploadChat(formData)
         const apiResponse = response.data
         const chatId = apiResponse.data.id
 

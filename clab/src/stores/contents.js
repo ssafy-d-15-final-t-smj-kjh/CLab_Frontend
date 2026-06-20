@@ -1,13 +1,13 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import api from "@/api/axios";
+import { contentApi } from "@/api/restApi";
 
 export const useContentStore = defineStore("content", () => {
     const contents = ref([])
 
     const fetchContents = async (participantId) => {
         try {
-            const response = await api.get(`/content/participant/${participantId}`)
+            const response = await contentApi.getContentsByParticipantId(participantId)
             const apiResponse = response.data
             contents.value = apiResponse.data
         } catch (error) {

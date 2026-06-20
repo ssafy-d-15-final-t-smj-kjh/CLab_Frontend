@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import api from "@/api/axios";
+import { participantApi, personaAnalysisApi } from "@/api/restApi";
 
 export const useParticipantStore = defineStore("participant", () => {
     const participants = ref([])
@@ -8,12 +8,12 @@ export const useParticipantStore = defineStore("participant", () => {
 
     const fetchParticipants = async (chatId) => {
         try {
-            const response = await api.get(`/participant/chat/${chatId}`)
+            const response = await participantApi.getParticipantsInChat(chatId)
             const apiResponse = response.data
             const participantList = apiResponse.data
 
             const scorePromises = participantList.map(p =>
-            api.get(`/persona-analysis/participant/${p.id}`)
+                personaAnalysisApi.getPersonaAnalysisByParticipantId(p.id)
                .catch(() => null) // 특정 사람의 점수 조회가 실패해도 전체 로직이 터지지 않도록 방어
             )
 
@@ -43,10 +43,10 @@ export const useParticipantStore = defineStore("participant", () => {
 
     const fetchParticipantInfo = async (participantId) => {
         try {
-            const response = await api.get(`/participant/${participantId}`)
+            const response = await participantApi.getParticipantInfoById(participantId)
             const apiResponse = response.data
             participant.value = apiResponse.data
-            const res = await api.get(`/persona-analysis/participant/${participantId}`)
+            const res = await personaAnalysisApi.getPersonaAnalysisByParticipantId(participantId)
             participant.value.tetoScore = res.data.data[0].tetoScore
         } catch (error) {
             console.error('대화 참여자 정보 조회 실패:', error)

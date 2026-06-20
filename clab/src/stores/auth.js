@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import api from "@/api/axios";
+import { memberApi } from "@/api/restApi";
 import { jwtDecode } from "jwt-decode";
 
 export const useAuthStore = defineStore("auth", () => {
@@ -35,7 +35,7 @@ export const useAuthStore = defineStore("auth", () => {
         if (!userId.value) return 
 
         try {
-            const response = await api.get(`/member/me`)
+            const response = await memberApi.getMe()
             const apiResponse = response.data;
             userInfo.value = apiResponse.data;
         } catch (error) {

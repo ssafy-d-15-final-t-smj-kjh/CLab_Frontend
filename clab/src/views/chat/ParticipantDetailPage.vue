@@ -18,7 +18,7 @@
                     <div class="header-badges">
                         <span class="badge badge-blue">대화 {{ participant?.count }}회</span>
                         <span class="badge badge-orange">
-                            테토 {{ analysis?.tetoScore ?? '-' }}점
+                            테토 {{ participant?.tetoScore ?? '-' }}점
                         </span>
                     </div>
                 </div>
@@ -46,7 +46,7 @@
                 </div>
                 <div class="mini-stat">
                     <span class="mini-stat-icon">⚡</span>
-                    <span class="mini-stat-val" :class="tetoClass">{{ analysis?.tetoScore ?? '-' }}</span>
+                    <span class="mini-stat-val" :class="tetoClass">{{ participant?.tetoScore ?? '-' }}</span>
                     <span class="mini-stat-label">테토 점수</span>
                 </div>
             </div>

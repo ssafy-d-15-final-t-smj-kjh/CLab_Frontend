@@ -17,7 +17,6 @@ api.interceptors.request.use(
     }
 )
 
-// 응답 인터셉터
 api.interceptors.response.use(
     (response) => {
         return response;
@@ -55,7 +54,7 @@ api.interceptors.response.use(
     }
 )
 
-function handleUnauthorized(message) {
+const handleUnauthorized = (message) => {
     console.warn(message);
 
     localStorage.removeItem('accessToken');
