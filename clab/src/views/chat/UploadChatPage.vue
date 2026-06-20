@@ -6,7 +6,7 @@
             <button class="back-btn" @click="router.push('/chat-list')">
                 <span>←</span>
             </button>
-            <h1 class="page-title">채팅 업로드하기</h1>
+            <h1 class="page-title">대화 업로드하기</h1>
             <div class="header-spacer"></div>
         </header>
 
@@ -16,7 +16,7 @@
             <div class="page-desc">
                 <span class="desc-icon">🦀</span>
                 <div>
-                    <p class="desc-title">어떤 채팅을 분석할까요?</p>
+                    <p class="desc-title">어떤 대화를 분석할까요?</p>
                     <p class="desc-sub">파일을 업로드하고 분석 유형을 선택해주세요!</p>
                 </div>
             </div>
@@ -664,6 +664,31 @@ const executeUpload = async () => {
     justify-content: center;
     font-size: 12px;
     font-weight: 700;
+}
+
+.form-input {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid var(--sand-dark, #ccc);
+    border-radius: 14px;
+    font-size: 14px;
+    color: var(--text-dark, #333);
+    background: var(--sand-light, #f9f9f9);
+    outline: none;
+    resize: none;
+    /* 크기조절 바 비활성화 */
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.form-input::placeholder {
+    color: #bbb;
+}
+
+.form-input:focus {
+    border-color: var(--ocean-blue, #5bb4c4);
+    background: var(--white, #fff);
+    box-shadow: 0 0 0 3px rgba(91, 180, 196, 0.15);
 }
 
 .form-textarea {
