@@ -11,7 +11,7 @@
                 </div>
             </div>
         </div>
-        
+
         <LoadingInfo v-if="isLoading" :is-loading="isLoading" />
         <RetryInfo v-else-if="error" :message="error" @retry="fetchParticipants" />
         <div class="container" v-else>
@@ -137,23 +137,38 @@
                 </div>
             </div>
 
-            <!-- 테토 점수 분포 -->
             <div class="section">
                 <h2 class="section-title">⚡ 테토 에너지 분포</h2>
-                <p class="section-desc">0점 = 여성적(에테르), 100점 = 남성적(테토)</p>
+                <p class="section-desc">0점 = 에테르(붉은색), 100점 = 테토(푸른색)</p>
 
                 <div class="teto-distribution">
                     <div v-for="p in participants" :key="p.id" class="teto-item" @click="goToDetail(p.id)">
-                        <span class="teto-name">{{ p.name }}</span>
+                        <span class="teto-name" :title="p.name">{{ p.name }}</span>
+
                         <div class="teto-bar-container">
                             <div class="teto-label-left">에테르</div>
-                            <div class="teto-full-bar">
-                                <div class="teto-fill" :style="{
-                                    width: (p.tetoScore ?? 0) + '%',
-                                    background: tetoGradient(p.persona?.teto_score)
-                                }"></div>
-                                <span class="teto-score-label">{{ p.tetoScore ?? 0 }}점</span>
+
+                            <div class="teto-bidirectional-wrap">
+                                <div class="teto-side left-side">
+                                    <div class="teto-fill ether-fill" v-if="p.tetoScore < 50"
+                                        :style="{ width: ((50 - p.tetoScore) * 2) + '%' }">
+                                    </div>
+                                </div>
+
+                                <div class="teto-center-mark"></div>
+
+                                <div class="teto-side right-side">
+                                    <div class="teto-fill teto-fill-blue" v-if="p.tetoScore > 50"
+                                        :style="{ width: ((p.tetoScore - 50) * 2) + '%' }">
+                                    </div>
+                                </div>
+
+                                <span class="teto-score-label"
+                                    :class="{ 'left-score': p.tetoScore < 50, 'right-score': p.tetoScore >= 50 }">
+                                    {{ p.tetoScore ?? 0 }}점
+                                </span>
                             </div>
+
                             <div class="teto-label-right">테토</div>
                         </div>
                     </div>
@@ -324,6 +339,7 @@ async function renderChart() {
             datasets: [dataset],
         },
         options: {
+            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
@@ -338,11 +354,11 @@ async function renderChart() {
                 x: {
                     grid: { color: '#f0d9a830' },
                     ticks: { color: '#3a3a3a', font: { size: 13 } },
+                    beginAtZero: true,
                 },
                 y: {
                     grid: { color: '#f0d9a830' },
-                    ticks: { color: '#3a3a3a' },
-                    beginAtZero: true,
+                    ticks: { color: '#3a3a3a', font: { size: 13 } },
                 },
             },
         },
@@ -657,7 +673,7 @@ onMounted(fetchData)
 .teto-distribution {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
 }
 
 .teto-item {
@@ -671,14 +687,19 @@ onMounted(fetchData)
     font-size: 14px;
     font-weight: 600;
     color: var(--text-dark);
-    min-width: 60px;
+    /* 이름 길이 관계없이 너비를 고정하여 막대 시작점을 맞춤 */
+    width: 60px; 
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .teto-bar-container {
     flex: 1;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
 }
 
 .teto-label-left,
@@ -688,29 +709,84 @@ onMounted(fetchData)
     white-space: nowrap;
 }
 
-.teto-full-bar {
+.teto-bidirectional-wrap {
     flex: 1;
-    height: 20px;
-    background: var(--sand);
-    border-radius: 10px;
-    overflow: hidden;
+    height: 22px;
+    background: var(--sand); /* 기본 배경색 */
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
     position: relative;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.teto-side {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.left-side {
+    justify-content: flex-end; /* 중앙(50)에서 왼쪽으로 뻗어나감 */
+    border-radius: 11px 0 0 11px;
+}
+
+.right-side {
+    justify-content: flex-start; /* 중앙(50)에서 오른쪽으로 뻗어나감 */
+    border-radius: 0 11px 11px 0;
 }
 
 .teto-fill {
     height: 100%;
-    border-radius: 10px;
-    transition: width 1s ease;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 에테르 (0~49) 붉은색/주황색 계열 */
+.ether-fill {
+    background: linear-gradient(270deg, var(--crab-orange), var(--crab-red));
+    border-radius: 11px 0 0 11px;
+}
+
+/* 테토 (51~100) 푸른색 계열 */
+.teto-fill-blue {
+    background: linear-gradient(90deg, var(--sky-blue), var(--ocean-blue));
+    border-radius: 0 11px 11px 0;
+}
+
+/* 50점 정중앙 기준선 */
+.teto-center-mark {
+    width: 2px;
+    height: 140%;
+    background: var(--text-gray);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    border-radius: 1px;
+}
+
+/* 점수 라벨 */
 .teto-score-label {
     position: absolute;
-    right: 8px;
     top: 50%;
     transform: translateY(-50%);
     font-size: 11px;
     font-weight: 700;
     color: var(--text-dark);
+    z-index: 3;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 2px 6px;
+    border-radius: 8px;
+}
+
+/* 점수에 따라 텍스트 위치 변경 */
+.left-score {
+    left: 8px;
+}
+
+.right-score {
+    right: 8px;
 }
 
 /* ── 로딩 ── */

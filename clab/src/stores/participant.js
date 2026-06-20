@@ -48,7 +48,6 @@ export const useParticipantStore = defineStore("participant", () => {
             participant.value = apiResponse.data
             const res = await api.get(`/persona-analysis/participant/${participantId}`)
             participant.value.tetoScore = res.data.data[0].tetoScore
-            console.log('participant', participant)
         } catch (error) {
             console.error('대화 참여자 정보 조회 실패:', error)
         }
