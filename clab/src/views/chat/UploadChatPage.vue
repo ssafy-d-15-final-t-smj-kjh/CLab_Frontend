@@ -87,8 +87,8 @@
 
                             <!-- 성격 분석 (활성화) -->
                             <button class="category-btn"
-                                :class="{ 'category-btn--active': selectedCategory === 'personality' }"
-                                @click="selectedCategory = 'personality'">
+                                :class="{ 'category-btn--active': selectedCategory === 'EMOTION' }"
+                                @click="selectedCategory = 'EMOTION'">
                                 <span class="category-emoji">🧠</span>
                                 <div class="category-text">
                                     <p class="category-name">성격 분석</p>
@@ -106,12 +106,13 @@
                                 </div>
                             </button>
 
-                            <!-- 회의 정리 및 분석 (비활성화) -->
-                            <button class="category-btn category-btn--disabled" disabled>
+                            <button class="category-btn"
+                                :class="{ 'category-btn--active': selectedCategory === 'MEETING' }"
+                                @click="selectedCategory = 'MEETING'">
                                 <span class="category-emoji">📊</span>
                                 <div class="category-text">
                                     <p class="category-name">회의 정리 및 분석</p>
-                                    <p class="category-desc category-wip">🚧 개발 진행중</p>
+                                    <p class="category-desc">회의 내용을 정리하고 분석해요</p>
                                 </div>
                             </button>
 
@@ -191,7 +192,7 @@ const fileInput = ref(null)
 const uploadedFile = ref(null)
 const fileContent = ref('')
 const isDragging = ref(false)
-const selectedCategory = ref('personality')   // 기본값 : 성격 분석
+const selectedCategory = ref('EMOTION')   // 기본값 : 성격 분석
 const showTimeModal = ref(false)
 const isLoading = ref(false)
 
@@ -322,13 +323,14 @@ const executeUpload = async () => {
         const chatDto = {
             userId: userInfo.value?.id ?? 0,
             title: form.title.trim(),
-            content: form.content.trim()
+            content: form.content.trim(),
+            category: selectedCategory.value
         }
 
         const jsonBlob = new Blob([JSON.stringify(chatDto)], { type: 'application/json' })
         formData.append('dto', jsonBlob)
 
-        const response = await chatApi.uploadChat(formData)
+        const response = await chatApi.uploadChat(formData) 
         const apiResponse = response.data
         const chatId = apiResponse.data.id
 
