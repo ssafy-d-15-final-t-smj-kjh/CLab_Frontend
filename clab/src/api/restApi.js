@@ -8,7 +8,7 @@ export const authApi = {
 
 export const memberApi = {
     getMe : () => api.get('/member/me'),
-    createMember : (data) => api.post("/member", data),
+    createMember : (data) => api.post("/member/join", data),
     updateMember : (id, data) => api.put(`/member/${id}`, data),
 }
 
