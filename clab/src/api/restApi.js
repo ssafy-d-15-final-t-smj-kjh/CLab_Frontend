@@ -54,3 +54,11 @@ export const participantCategoryApi = {
 export const contentApi = {
     getContentsByParticipantId : (participantId) => api.get(`/content/participant/${participantId}`),
 }
+
+export const meetingAnalysisApi = {
+    getMeetingAnalysisByChatId : (chatId) => api.get(`/meeting-analysis/chat/${chatId}`),
+}
+
+export const meetingParticipationApi = {
+    getMeetingParticipationByMeetingAnalysisId : (meetingAnalysisId) => api.get(`/meeting-participation/meeting-analysis/${meetingAnalysisId}`),
+}

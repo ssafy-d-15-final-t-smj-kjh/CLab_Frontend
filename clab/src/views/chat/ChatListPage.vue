@@ -101,14 +101,15 @@ const formatTime = (dateStr) => {
 }
 
 // ── 상세 이동 ───────────────────────────────────────────────
-const goToDetail = (id) => {
-    router.push(`/chat-detail/${id}`)
+const goToDetail = (chatId) => {
+    router.push(`/chat/${chatId}`)
 }
 
 // ── 데이터 ──────────────────────────────────────────────────
-const { chats } = storeToRefs(chatStore)
 const isLoading = ref(false)
 const error = ref(null)
+
+const { chats } = storeToRefs(chatStore)
 
 const fetchChats = async () => {
     isLoading.value = true

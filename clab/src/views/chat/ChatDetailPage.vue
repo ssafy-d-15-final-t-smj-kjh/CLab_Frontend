@@ -4,7 +4,7 @@
     <div class="chat-detail-page" v-else>
         <!-- 헤더 -->
         <header class="page-header">
-            <button class="back-btn" @click="router.push('/chat-list')">
+            <button class="back-btn" @click="goToChatList">
                 <span class="back-icon">←</span>
             </button>
             <h1 class="page-title">💬 대화 상세</h1>
@@ -82,8 +82,13 @@
                 <button class="btn-white" @click="goToChatList">
                     ← 목록
                 </button>
-                <button class="btn-participant" @click="goToParticipantList">
-                    👥 참여자 목록
+                <button v-if="chatInfo.category === 'EMOTION'"
+                class="btn-participant" @click="goToPersonaAnalysis">
+                    👥 감정 분석 결과
+                </button>
+                <button v-else-if="chatInfo.category === 'MEETING'"
+                class="btn-participant" @click="goToMeetingAnalysis">
+                    👥 회의 분석 결과
                 </button>
                 <button class="btn-red" @click="goToDeleteChat">
                     ❌ 삭제하기
@@ -113,7 +118,7 @@ const { chatInfo } = storeToRefs(chatStore)
 
 const isLoading = ref(true)
 const error = ref(null)
-const chatId = route.params.id
+const chatId = route.params.chatId
 
 // ── 날짜 포맷 ────────────────────────────────────────────
 const formatTime = (dateStr) => {
@@ -131,8 +136,9 @@ const formatTime = (dateStr) => {
         hour12: true
     })
 }
-const goToChatList = () => router.push(`/chat-list`)
-const goToParticipantList = () => router.push(`/chat/${chatId}/participant-list`)
+const goToChatList = () => router.push(`/chat`)
+const goToPersonaAnalysis = () => router.push(`/chat/${chatId}/persona-analysis`)
+const goToMeetingAnalysis = () => router.push(`/chat/${chatId}/meeting-analysis`)
 const goToEditChat = () => router.push(`/edit-chat/${chatId}`)
 const goToDeleteChat = async () => {
     const confirmed = confirm('정말 삭제하시겠습니까?')

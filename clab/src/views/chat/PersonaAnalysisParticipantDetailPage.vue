@@ -184,7 +184,7 @@ import { storeToRefs } from 'pinia'
 import { useParticipantStore } from '@/stores/participant'
 import { usePersonaStore } from '@/stores/persona'
 import { useContentStore } from '@/stores/contents'
-import { useAnalysisStore } from '@/stores/analysis'
+import { usePersonaAnalysisStore } from '@/stores/persona-analysis'
 import { useContentCategoryStore } from '@/stores/content-category'
 import { useParticipantCategoryStore } from '@/stores/participant-category'
 import { useCategoryStore } from '@/stores/category'
@@ -200,7 +200,7 @@ const router = useRouter()
 const participantStore = useParticipantStore()
 const personaStore = usePersonaStore()
 const contentStore = useContentStore()
-const analysisStore = useAnalysisStore()
+const personaAnalysisStore = usePersonaAnalysisStore()
 const contentCategoryStore = useContentCategoryStore()
 const participantCategoryStore = useParticipantCategoryStore()
 const categoryStore = useCategoryStore()
@@ -215,7 +215,7 @@ const error = ref(null)
 const { participant } = storeToRefs(participantStore)
 const { persona } = storeToRefs(personaStore)
 const { contents } = storeToRefs(contentStore)
-const { analysis } = storeToRefs(analysisStore)
+const { personaAnalysis } = storeToRefs(personaAnalysisStore)
 const { contentCategories } = storeToRefs(contentCategoryStore)
 const { participantCategories } = storeToRefs(participantCategoryStore)
 const { categories } = storeToRefs(categoryStore)
@@ -230,7 +230,7 @@ const chartData = computed(() => categories.value.map(c => getCategoryCount(c.id
 const chartColors = computed(() => categories.value.map(c => categoryColors[c.id]))
 
 const goToList = () => {
-    router.push(`/chat/${chatId}/participant-list`)
+    router.push(`/chat/${chatId}/persona-analysis`)
 }
 
 // ── 색상 ─────────────────────────────────────────────
@@ -352,14 +352,14 @@ const fetchParticipantInfo = async () => {
     await participantStore.fetchParticipantInfo(participantId)
 }
 const fetchPersona = async () => {
-    if (!analysis.value.personaId) return
-    await personaStore.fetchPersona(analysis.value.personaId)
+    if (!personaAnalysis.value.personaId) return
+    await personaStore.fetchPersona(personaAnalysis.value.personaId)
 }
 const fetchContents = async () => {
     await contentStore.fetchContents(participantId)
 }
 const fetchAnalysis = async () => {
-    await analysisStore.fetchAnalysis(participantId)
+    await personaAnalysisStore.fetchPersonaAnalysis(participantId)
 }
 const fetchContentCategories = async () => {
     if (!contents.value || contents.value.length === 0) return

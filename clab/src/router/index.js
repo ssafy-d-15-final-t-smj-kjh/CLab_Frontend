@@ -10,8 +10,9 @@ import ChatListPage from "@/views/chat/ChatListPage.vue";
 import ChatDetailPage from "@/views/chat/ChatDetailPage.vue";
 import UploadChatPage from "@/views/chat/UploadChatPage.vue";
 import EditChatPage from "@/views/chat/EditChatPage.vue";
-import ParticipantListPage from "@/views/chat/ParticipantListPage.vue";
-import ParticipantDetailPage from "@/views/chat/ParticipantDetailPage.vue";
+import MeetingAnalysisPage from "@/views/chat/MeetingAnalysisPage.vue";
+import PersonaAnalysisParticipantDetailPage from "@/views/chat/PersonaAnalysisParticipantDetailPage.vue";
+import PersonaAnalysisPage from "@/views/chat/PersonaAnalysisPage.vue";
 
 const routes = [
 {
@@ -54,12 +55,12 @@ const routes = [
   component: EditProfilePage,
 },
 {
-  path: '/chat-list',
+  path: '/chat',
   name: 'ChatList',
   component: ChatListPage,
 },
 {
-  path: '/chat-detail/:id',
+  path: '/chat/:chatId',
   name: 'ChatDetail',
   component: ChatDetailPage,
 },
@@ -74,14 +75,19 @@ const routes = [
     component: EditChatPage
   },
   {
-    path: '/chat/:chatId/participant-list',
-    name: 'ParticipantList',
-    component: ParticipantListPage
+    path: '/chat/:chatId/persona-analysis',
+    name: 'PersonaAnalysis',
+    component: PersonaAnalysisPage
   },
   {
-    path: '/chat/:chatId/participant-detail/:participantId',
-    name: 'ParticipantDetail',
-    component: ParticipantDetailPage
+    path: '/chat/:chatId/persona-analysis/participant/:participantId',
+    name: 'PersonaAnalysisParticipantDetail',
+    component: PersonaAnalysisParticipantDetailPage
+  },
+  {
+    path: '/chat/:chatId/meeting-analysis',
+    name: 'MeetingAnalysis',
+    component: MeetingAnalysisPage
   },
 
 ]

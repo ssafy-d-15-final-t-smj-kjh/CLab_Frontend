@@ -2,7 +2,7 @@
     <div class="list-page">
         <div class="page-header">
             <div class="header-inner">
-                <button class="back-btn" @click="goBack">
+                <button class="back-btn" @click="goToChatDetail">
                     <span>←</span>
                 </button>
                 <div class="header-title">
@@ -59,7 +59,7 @@
                     <div class="participant-cards">
                         <div v-for="(p, index) in rankedParticipants" :key="p.id" class="participant-card"
                             :class="{ 'rank-1': index === 0, 'rank-2': index === 1, 'rank-3': index === 2 }"
-                            @click="goToDetail(p.id)">
+                            @click="goToParticipantDetail(p.id)">
                             <div class="rank-badge">
                                 <span v-if="index === 0">🥇</span>
                                 <span v-else-if="index === 1">🥈</span>
@@ -313,8 +313,8 @@ const toggleSortOrder = () => {
     sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc'
 }
 
-const goBack = () => router.push(`/chat-detail/${chatId}`)
-const goToDetail = (participantId) => router.push(`/chat/${chatId}/participant-detail/${participantId}`)
+const goToChatDetail = () => router.push(`/chat/${chatId}`)
+const goToParticipantDetail = (participantId) => router.push(`/chat/${chatId}/persona-analysis/participant/${participantId}`)
 
 // ── 차트 ────────────────────────────────────────────
 const buildChartData = () => {
