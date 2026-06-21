@@ -6,7 +6,7 @@
             <button class="back-btn" @click="router.push('/chat-list')">
                 <span>←</span>
             </button>
-            <h1 class="page-title">채팅 업로드하기</h1>
+            <h1 class="page-title">대화 업로드하기</h1>
             <div class="header-spacer"></div>
         </header>
 
@@ -16,7 +16,7 @@
             <div class="page-desc">
                 <span class="desc-icon">🦀</span>
                 <div>
-                    <p class="desc-title">어떤 채팅을 분석할까요?</p>
+                    <p class="desc-title">어떤 대화를 분석할까요?</p>
                     <p class="desc-sub">파일을 업로드하고 분석 유형을 선택해주세요!</p>
                 </div>
             </div>
@@ -65,6 +65,7 @@
                                     <div class="file-info">
                                         <p class="file-name">{{ uploadedFile.name }}</p>
                                         <p class="file-size">{{ formatFileSize(uploadedFile.size) }}</p>
+                                        <span class="time-badge"> | ⏱️ 예상 분석 시간: {{ formattedAnticipatedTime }}</span>
                                     </div>
                                     <button class="file-remove-btn" @click.stop="removeFile">✕</button>
                                 </div>
@@ -126,7 +127,7 @@
                         </div>
                     </div>
 
-                    
+
                 </div>
             </div>
             <div class="section-card">
@@ -154,14 +155,19 @@
             </div>
 
             <!-- 분석하기 버튼 -->
-            <button class="btn-analyze" :disabled="!canSubmit" @click="handleSubmit">
+            <button class="btn-analyze" :disabled="!canSubmit" @click="requestSubmit">
                 <span>🔬</span>
                 분석하기
             </button>
-
         </div>
 
-        <AnalysisLoading :is-loading="isLoading" />
+        <AnticipatedTimeModal :isVisible="showTimeModal"
+        :fileSize="uploadedFile?.size || 0"
+        :estimated-seconds = "estimatedSeconds"
+        @confirm="executeUpload"
+        @cancel="showTimeModal = false" />
+
+        <AnalysisLoading :is-loading="isLoading" :file-size="uploadedFile?.size" :estimated-seconds="estimatedSeconds"/>
 
     </div>
 </template>
@@ -173,6 +179,7 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api/axios'
 
+import AnticipatedTimeModal from '@/components/AnticipatedTimeModal.vue'
 import AnalysisLoading from '@/components/AnalysisLoading.vue'
 
 const router = useRouter()
@@ -185,6 +192,7 @@ const uploadedFile = ref(null)
 const fileContent = ref('')
 const isDragging = ref(false)
 const selectedCategory = ref('personality')   // 기본값 : 성격 분석
+const showTimeModal = ref(false)
 const isLoading = ref(false)
 
 // ✨ [신규] 제목 및 내용 폼 상태 추가 ───────────────────────────
@@ -199,12 +207,28 @@ const errors = reactive({
 })
 
 // ── 분석하기 버튼 활성 조건 ──────────────────────────────────
-const canSubmit = computed(() => 
-    uploadedFile.value && 
-    selectedCategory.value && 
-    form.title.trim() && 
+const canSubmit = computed(() =>
+    uploadedFile.value &&
+    selectedCategory.value &&
+    form.title.trim() &&
     form.content.trim()
 )
+
+const estimatedSeconds = computed(() => {
+    if (!uploadedFile.value) return 0
+    const kb = uploadedFile.value.size / 1024
+    return Math.ceil((kb * 5) + 10) // 1KB당 5초 + 기본 10초
+})
+
+const formattedAnticipatedTime = computed(() => {
+    const seconds = estimatedSeconds.value
+    if (seconds === 0) return ''
+    if (seconds < 60) return `약 ${seconds}초`
+    
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return s === 0 ? `약 ${m}분` : `약 ${m}분 ${s}초`
+})
 
 // ── 유효성 검사 함수 추가 ──────────────────────────────────────
 const validateForm = () => {
@@ -249,7 +273,7 @@ const handleFile = (file) => {
     }
 
     uploadedFile.value = file
-    
+
     // 💡 편리함을 위해 파일을 올렸을 때 제목 칸이 비어있다면 파일명으로 자동 세팅해줍니다.
     if (!form.title.trim()) {
         form.title = file.name.replace(/\.[^/.]+$/, "") // 확장자 제거한 파일명
@@ -275,9 +299,19 @@ const removeFile = () => {
 }
 
 // ── 제출 ────────────────────────────────────────────────────
-const handleSubmit = async () => {
+const requestSubmit = () => {
     if (!canSubmit.value || !validateForm()) return
 
+    if (!uploadedFile.value) {
+        alert('파일을 선택해주세요.')
+        return
+    }
+
+    showTimeModal.value = true
+}
+
+const executeUpload = async () => {
+    showTimeModal.value = false
     isLoading.value = true
 
     try {
@@ -632,6 +666,31 @@ const handleSubmit = async () => {
     font-weight: 700;
 }
 
+.form-input {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid var(--sand-dark, #ccc);
+    border-radius: 14px;
+    font-size: 14px;
+    color: var(--text-dark, #333);
+    background: var(--sand-light, #f9f9f9);
+    outline: none;
+    resize: none;
+    /* 크기조절 바 비활성화 */
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.form-input::placeholder {
+    color: #bbb;
+}
+
+.form-input:focus {
+    border-color: var(--ocean-blue, #5bb4c4);
+    background: var(--white, #fff);
+    box-shadow: 0 0 0 3px rgba(91, 180, 196, 0.15);
+}
+
 .form-textarea {
     width: 100%;
     padding: 13px 16px;
@@ -641,7 +700,8 @@ const handleSubmit = async () => {
     color: var(--text-dark, #333);
     background: var(--sand-light, #f9f9f9);
     outline: none;
-    resize: none; /* 크기조절 바 비활성화 */
+    resize: none;
+    /* 크기조절 바 비활성화 */
     font-family: inherit;
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }

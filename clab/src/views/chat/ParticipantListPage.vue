@@ -1,6 +1,5 @@
 <template>
     <div class="list-page">
-        <!-- 헤더 -->
         <div class="page-header">
             <div class="header-inner">
                 <button class="back-btn" @click="goBack">
@@ -11,12 +10,12 @@
                 </div>
             </div>
         </div>
-        
+
         <LoadingInfo v-if="isLoading" :is-loading="isLoading" />
         <RetryInfo v-else-if="error" :message="error" @retry="fetchParticipants" />
         <div class="container" v-else>
             <p class="chat-title">{{ chatInfo?.title }}</p>
-            <!-- 통계 요약 카드 -->
+
             <div class="summary-section">
                 <div class="summary-card">
                     <span class="summary-icon">💬</span>
@@ -41,124 +40,155 @@
                 </div>
             </div>
 
-            <!-- 순위 & 참여자 카드 -->
-            <div class="section">
-                <h2 class="section-title">🏆 참여자 순위</h2>
-                <p class="section-desc">대화 참여도 기준 순위입니다</p>
+            <div class="main-tabs">
+                <button class="main-tab" :class="{ active: currentMainTab === 'summary' }"
+                    @click="currentMainTab = 'summary'">
+                    📋 참여자 요약
+                </button>
+                <button class="main-tab" :class="{ active: currentMainTab === 'chart' }"
+                    @click="currentMainTab = 'chart'">
+                    📊 참여자 비교 차트
+                </button>
+            </div>
 
-                <div class="participant-cards">
-                    <div v-for="(p, index) in rankedParticipants" :key="p.id" class="participant-card"
-                        :class="{ 'rank-1': index === 0, 'rank-2': index === 1, 'rank-3': index === 2 }"
-                        @click="goToDetail(p.id)">
-                        <!-- 순위 배지 -->
-                        <div class="rank-badge">
-                            <span v-if="index === 0">🥇</span>
-                            <span v-else-if="index === 1">🥈</span>
-                            <span v-else-if="index === 2">🥉</span>
-                            <span v-else class="rank-num">{{ index + 1 }}</span>
+            <div v-if="currentMainTab === 'summary'" class="tab-content">
+                <div class="section">
+                    <h2 class="section-title">📋 참여자 요약</h2>
+                    <p class="section-desc">대화 참여자 요약 정보입니다</p>
+
+                    <div class="participant-cards">
+                        <div v-for="(p, index) in rankedParticipants" :key="p.id" class="participant-card"
+                            :class="{ 'rank-1': index === 0, 'rank-2': index === 1, 'rank-3': index === 2 }"
+                            @click="goToDetail(p.id)">
+                            <div class="rank-badge">
+                                <span v-if="index === 0">🥇</span>
+                                <span v-else-if="index === 1">🥈</span>
+                                <span v-else-if="index === 2">🥉</span>
+                                <span v-else class="rank-num">{{ index + 1 }}</span>
+                            </div>
+
+                            <div class="avatar" :style="{ backgroundColor: avatarColors[index % avatarColors.length] }">
+                                {{ index + 1 }}
+                            </div>
+
+                            <div class="card-info">
+                                <h3 class="participant-name">{{ p.name }}</h3>
+
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <span class="stat-label">💬 대화 수</span>
+                                        <span class="stat-value">{{ p.count }}회</span>
+                                        <div class="stat-bar">
+                                            <div class="stat-bar-fill"
+                                                :style="{ width: getPercent(p.count, maxCount) + '%', backgroundColor: '#5bb4c4' }">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="stat-item">
+                                        <span class="stat-label">⏱️ 평균 답장</span>
+                                        <span class="stat-value">{{ formatReplyTime(p.averageReplyTime) }}</span>
+                                        <div class="stat-bar">
+                                            <div class="stat-bar-fill"
+                                                :style="{ width: getReplyPercent(p.averageReplyTime) + '%', backgroundColor: '#a8dadc' }">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="stat-item">
+                                        <span class="stat-label">📝 대화 길이</span>
+                                        <span class="stat-value">{{ p.chatLength }}자</span>
+                                        <div class="stat-bar">
+                                            <div class="stat-bar-fill"
+                                                :style="{ width: getPercent(p.chatLength, maxLength) + '%', backgroundColor: '#e8554e' }">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="stat-item">
+                                        <span class="stat-label">⚡ 테토 점수</span>
+                                        <span class="stat-value teto-score" :class="tetoClass(p.tetoScore)">
+                                            {{ p.tetoScore ?? '-' }}점
+                                        </span>
+                                        <div class="stat-bar">
+                                            <div class="stat-bar-fill teto-bar" :style="{
+                                                width: (p.tetoScore ?? 0) + '%',
+                                                background: tetoGradient(p.tetoScore)
+                                            }"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-arrow">→</div>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- 참여자 아바타 -->
-                        <div class="avatar" :style="{ backgroundColor: avatarColors[index % avatarColors.length] }">
-                            {{ p.name }}
-                        </div>
+                <div class="section">
+                    <h2 class="section-title">⚡ 테토 에너지 분포</h2>
+                    <p class="section-desc">0점 = 에테르(붉은색), 100점 = 테토(푸른색)</p>
 
-                        <!-- 참여자 정보 -->
-                        <div class="card-info">
-                            <h3 class="participant-name">{{ p.name }}</h3>
+                    <div class="teto-distribution">
+                        <div v-for="p in participants" :key="p.id" class="teto-item" @click="goToDetail(p.id)">
+                            <span class="teto-name" :title="p.name">{{ p.name }}</span>
 
-                            <!-- 스탯 그리드 -->
-                            <div class="stats-grid">
-                                <div class="stat-item">
-                                    <span class="stat-label">💬 대화 수</span>
-                                    <span class="stat-value">{{ p.count }}회</span>
-                                    <div class="stat-bar">
-                                        <div class="stat-bar-fill"
-                                            :style="{ width: getPercent(p.count, maxCount) + '%', backgroundColor: '#5bb4c4' }">
+                            <div class="teto-bar-container">
+                                <div class="teto-label-left">에테르</div>
+
+                                <div class="teto-bidirectional-wrap">
+                                    <div class="teto-side left-side">
+                                        <div class="teto-fill ether-fill" v-if="p.tetoScore < 50"
+                                            :style="{ width: ((50 - p.tetoScore) * 2) + '%' }">
                                         </div>
                                     </div>
-                                </div>
 
-                                <div class="stat-item">
-                                    <span class="stat-label">⏱️ 평균 답장</span>
-                                    <span class="stat-value">{{ formatReplyTime(p.averageReplyTime) }}</span>
-                                    <div class="stat-bar">
-                                        <div class="stat-bar-fill"
-                                            :style="{ width: getReplyPercent(p.averageReplyTime) + '%', backgroundColor: '#a8dadc' }">
+                                    <div class="teto-center-mark"></div>
+
+                                    <div class="teto-side right-side">
+                                        <div class="teto-fill teto-fill-blue" v-if="p.tetoScore > 50"
+                                            :style="{ width: ((p.tetoScore - 50) * 2) + '%' }">
                                         </div>
                                     </div>
-                                </div>
 
-                                <div class="stat-item">
-                                    <span class="stat-label">📝 대화 길이</span>
-                                    <span class="stat-value">{{ p.chatLength }}자</span>
-                                    <div class="stat-bar">
-                                        <div class="stat-bar-fill"
-                                            :style="{ width: getPercent(p.chatLength, maxLength) + '%', backgroundColor: '#e8554e' }">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="stat-item">
-                                    <span class="stat-label">⚡ 테토 점수</span>
-                                    <span class="stat-value teto-score" :class="tetoClass(p.tetoScore)">
-                                        {{ p.tetoScore ?? '-' }}점
+                                    <span class="teto-score-label"
+                                        :class="{ 'left-score': p.tetoScore < 50, 'right-score': p.tetoScore >= 50 }">
+                                        {{ p.tetoScore ?? 0 }}점
                                     </span>
-                                    <div class="stat-bar">
-                                        <div class="stat-bar-fill teto-bar" :style="{
-                                            width: (p.tetoScore ?? 0) + '%',
-                                            background: tetoGradient(p.tetoScore)
-                                        }"></div>
-                                    </div>
                                 </div>
+
+                                <div class="teto-label-right">테토</div>
                             </div>
                         </div>
-
-                        <!-- 화살표 -->
-                        <div class="card-arrow">→</div>
                     </div>
                 </div>
             </div>
 
-            <!-- 비교 차트 섹션 -->
-            <div class="section">
-                <h2 class="section-title">📊 참여자 비교 차트</h2>
-
-                <!-- 차트 탭 -->
-                <div class="chart-tabs">
-                    <button v-for="tab in chartTabs" :key="tab.key" class="chart-tab"
-                        :class="{ active: activeChart === tab.key }" @click="activeChart = tab.key">
-                        {{ tab.label }}
-                    </button>
-                </div>
-
-                <div class="chart-wrapper">
-                    <canvas ref="barChartRef"></canvas>
-                </div>
-            </div>
-
-            <!-- 테토 점수 분포 -->
-            <div class="section">
-                <h2 class="section-title">⚡ 테토 에너지 분포</h2>
-                <p class="section-desc">0점 = 여성적(에테르), 100점 = 남성적(테토)</p>
-
-                <div class="teto-distribution">
-                    <div v-for="p in participants" :key="p.id" class="teto-item" @click="goToDetail(p.id)">
-                        <span class="teto-name">{{ p.name }}</span>
-                        <div class="teto-bar-container">
-                            <div class="teto-label-left">에테르</div>
-                            <div class="teto-full-bar">
-                                <div class="teto-fill" :style="{
-                                    width: (p.tetoScore ?? 0) + '%',
-                                    background: tetoGradient(p.persona?.teto_score)
-                                }"></div>
-                                <span class="teto-score-label">{{ p.tetoScore ?? 0 }}점</span>
-                            </div>
-                            <div class="teto-label-right">테토</div>
+            <div v-else-if="currentMainTab === 'chart'" class="tab-content">
+                <div class="section">
+                    <div class="chart-header">
+                        <div>
+                            <h2 class="section-title">📊 참여자 비교 차트</h2>
+                            <p class="section-desc">참여자 간의 수치를 한눈에 비교해보세요.</p>
                         </div>
+                        <button class="sort-btn" @click="toggleSortOrder">
+                            {{ sortOrder === 'desc' ? '⬇️ 내림차순' : '⬆️ 오름차순' }}
+                        </button>
+                    </div>
+
+                    <div class="chart-tabs">
+                        <button v-for="tab in chartTabs" :key="tab.key" class="chart-tab"
+                            :class="{ active: activeChart === tab.key }" @click="activeChart = tab.key">
+                            {{ tab.label }}
+                        </button>
+                    </div>
+
+                    <div class="chart-wrapper" :style="{ height: Math.max(300, participants.length * 45) + 'px' }">
+                        <canvas ref="barChartRef"></canvas>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </template>
@@ -190,10 +220,17 @@ const { chatInfo } = storeToRefs(chatStore)
 const { participants } = storeToRefs(participantStore)
 
 const chatId = route.params.chatId
+
+// ── 탭 상태 ──────────────────────────────────────────
+const currentMainTab = ref('summary') // 'summary' | 'chart'
+
+// ── 차트 상태 ─────────────────────────────────────────
 const barChartRef = ref(null)
 let barChartInstance = null
 
 const activeChart = ref('count')
+const sortOrder = ref('desc') // 'desc' (내림차순) | 'asc' (오름차순)
+
 const chartTabs = [
     { key: 'count', label: '💬 대화 수' },
     { key: 'reply', label: '⏱️ 답장 시간' },
@@ -223,14 +260,30 @@ const maxCount = computed(() => Math.max(...participants.value.map(p => p.count)
 const maxLength = computed(() => Math.max(...participants.value.map(p => p.chatLength), 1))
 const maxReply = computed(() => Math.max(...participants.value.map(p => p.averageReplyTime), 1))
 
-// ── 유틸 ────────────────────────────────────────────
-const getPercent = (val, max) => {
-    return max === 0 ? 0 : Math.round((val / max) * 100)
-}
+// 차트 정렬용 데이터 (현재 활성화된 탭과 정렬 기준에 맞춰 재정렬)
+const chartSortedParticipants = computed(() => {
+    return [...participants.value].sort((a, b) => {
+        let valA = 0, valB = 0;
 
+        switch (activeChart.value) {
+            case 'count':
+                valA = a.count; valB = b.count; break;
+            case 'reply':
+                valA = a.averageReplyTime ?? 0; valB = b.averageReplyTime ?? 0; break;
+            case 'length':
+                valA = a.chatLength; valB = b.chatLength; break;
+            case 'teto':
+                valA = a.tetoScore ?? 0; valB = b.tetoScore ?? 0; break;
+        }
+
+        return sortOrder.value === 'desc' ? valB - valA : valA - valB;
+    });
+})
+
+// ── 유틸 ────────────────────────────────────────────
+const getPercent = (val, max) => max === 0 ? 0 : Math.round((val / max) * 100)
 
 const getReplyPercent = (val) => {
-    // 답장이 빠를수록 높은 점수로 변환
     if (!val || val === 0) return 100
     return Math.max(10, 100 - Math.round((val / maxReply.value) * 100))
 }
@@ -256,47 +309,46 @@ const tetoGradient = (score) => {
     return 'linear-gradient(90deg, #a8dadc, #5bb4c4)'
 }
 
-const goBack = () => {
-    router.push(`/chat-detail/${chatId}`)
+const toggleSortOrder = () => {
+    sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc'
 }
-const goToDetail = (participantId) => {
-    router.push(`/chat/${chatId}/participant-detail/${participantId}`)
-}
+
+const goBack = () => router.push(`/chat-detail/${chatId}`)
+const goToDetail = (participantId) => router.push(`/chat/${chatId}/participant-detail/${participantId}`)
 
 // ── 차트 ────────────────────────────────────────────
 const buildChartData = () => {
-    const names = participants.value.map(p => p.name)
+    const list = chartSortedParticipants.value;
+    const names = list.map(p => p.name)
 
     const datasets = {
         count: {
             label: '대화 수',
-            data: participants.value.map(p => p.count),
+            data: list.map(p => p.count),
             backgroundColor: '#5bb4c480',
             borderColor: '#5bb4c4',
             borderWidth: 2,
         },
         reply: {
             label: '평균 답장 시간 (초)',
-            data: participants.value.map(p => p.averageReplyTime ?? 0),
+            data: list.map(p => p.averageReplyTime ?? 0),
             backgroundColor: '#a8dadc80',
             borderColor: '#a8dadc',
             borderWidth: 2,
         },
         length: {
             label: '대화 길이 (자)',
-            data: participants.value.map(p => p.chatLength),
+            data: list.map(p => p.chatLength),
             backgroundColor: '#e8554e80',
             borderColor: '#e8554e',
             borderWidth: 2,
         },
         teto: {
             label: '테토 점수',
-            data: participants.value.map(p => p.tetoScore ?? 0),
-            backgroundColor: participants.value.map(p =>
-                (p.persona?.teto_score ?? 0) >= 70
-                    ? '#c41e3a80'
-                    : (p.persona?.teto_score ?? 0) >= 40
-                        ? '#e8554e80'
+            data: list.map(p => p.tetoScore ?? 0),
+            backgroundColor: list.map(p =>
+                (p.tetoScore ?? 0) >= 70 ? '#c41e3a80'
+                    : (p.tetoScore ?? 0) >= 40 ? '#e8554e80'
                         : '#a8dadc80'
             ),
             borderColor: '#c41e3a',
@@ -308,6 +360,9 @@ const buildChartData = () => {
 }
 
 async function renderChart() {
+    // 탭이 차트가 아닐 때는 렌더링 시도 방지 (canvas가 없음)
+    if (currentMainTab.value !== 'chart') return;
+
     await nextTick()
     if (!barChartRef.value) return
 
@@ -324,8 +379,9 @@ async function renderChart() {
             datasets: [dataset],
         },
         options: {
+            indexAxis: 'y', // 가로 막대 그래프
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: false, // 컨테이너의 높이를 채우기 위해 false
             plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -338,40 +394,33 @@ async function renderChart() {
                 x: {
                     grid: { color: '#f0d9a830' },
                     ticks: { color: '#3a3a3a', font: { size: 13 } },
+                    beginAtZero: true,
                 },
                 y: {
                     grid: { color: '#f0d9a830' },
-                    ticks: { color: '#3a3a3a' },
-                    beginAtZero: true,
+                    ticks: { color: '#3a3a3a', font: { size: 13 } },
                 },
             },
         },
     })
 }
 
-watch(activeChart, renderChart)
+// 탭, 차트 종류, 정렬 순서가 바뀌면 다시 그리기
+watch([currentMainTab, activeChart, sortOrder], renderChart)
 
 // ── API 호출 ─────────────────────────────────────────
 const fetchData = async () => {
     isLoading.value = true
     error.value = null
     try {
-        await fetchChatInfo()
-        await fetchParticipants()
+        await chatStore.fetchChatInfo(chatId)
+        await participantStore.fetchParticipants(chatId)
     } catch (e) {
         console.error(e)
         error.value = '정보를 불러오는 데 실패하였습니다.'
     } finally {
         isLoading.value = false
-        await renderChart()
     }
-}
-
-const fetchChatInfo = async () => {
-    await chatStore.fetchChatInfo(chatId)
-}
-const fetchParticipants = async () => {
-    await participantStore.fetchParticipants(chatId)
 }
 
 onMounted(fetchData)
@@ -442,7 +491,7 @@ onMounted(fetchData)
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 .summary-card {
@@ -472,6 +521,62 @@ onMounted(fetchData)
     color: var(--text-dark);
 }
 
+/* ── 메인 탭 ── */
+.main-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+    border-bottom: 2px solid var(--sand-dark);
+    padding-bottom: 4px;
+}
+
+.main-tab {
+    background: none;
+    border: none;
+    padding: 12px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-gray);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+}
+
+.main-tab:hover {
+    color: var(--text-dark);
+}
+
+.main-tab.active {
+    color: var(--ocean-blue);
+}
+
+.main-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--ocean-blue);
+    border-radius: 4px 4px 0 0;
+}
+
+.tab-content {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* ── 섹션 ── */
 .section {
     margin-bottom: 36px;
@@ -488,6 +593,31 @@ onMounted(fetchData)
     font-size: 13px;
     color: var(--text-gray);
     margin: 0 0 16px;
+}
+
+/* 차트 헤더 영역 (정렬 버튼 배치) */
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.sort-btn {
+    background: var(--white);
+    border: 1px solid var(--sand-dark);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: background 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sort-btn:hover {
+    background: var(--sand-light);
 }
 
 /* ── 참여자 카드 ── */
@@ -619,7 +749,7 @@ onMounted(fetchData)
     flex-shrink: 0;
 }
 
-/* ── 차트 ── */
+/* ── 차트 탭 ── */
 .chart-tabs {
     display: flex;
     gap: 8px;
@@ -649,15 +779,15 @@ onMounted(fetchData)
     background: var(--white);
     border-radius: 20px;
     padding: 24px;
-    height: 280px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    /* 높이는 인라인 스타일에서 동적으로 관리됩니다. */
 }
 
 /* ── 테토 분포 ── */
 .teto-distribution {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
 }
 
 .teto-item {
@@ -671,14 +801,18 @@ onMounted(fetchData)
     font-size: 14px;
     font-weight: 600;
     color: var(--text-dark);
-    min-width: 60px;
+    width: 60px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .teto-bar-container {
     flex: 1;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
 }
 
 .teto-label-left,
@@ -688,56 +822,79 @@ onMounted(fetchData)
     white-space: nowrap;
 }
 
-.teto-full-bar {
+.teto-bidirectional-wrap {
     flex: 1;
-    height: 20px;
+    height: 22px;
     background: var(--sand);
-    border-radius: 10px;
-    overflow: hidden;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
     position: relative;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.teto-side {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.left-side {
+    justify-content: flex-end;
+    border-radius: 11px 0 0 11px;
+}
+
+.right-side {
+    justify-content: flex-start;
+    border-radius: 0 11px 11px 0;
 }
 
 .teto-fill {
     height: 100%;
-    border-radius: 10px;
-    transition: width 1s ease;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ether-fill {
+    background: linear-gradient(270deg, var(--crab-orange), var(--crab-red));
+    border-radius: 11px 0 0 11px;
+}
+
+.teto-fill-blue {
+    background: linear-gradient(90deg, var(--sky-blue), var(--ocean-blue));
+    border-radius: 0 11px 11px 0;
+}
+
+.teto-center-mark {
+    width: 2px;
+    height: 140%;
+    background: var(--text-gray);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    border-radius: 1px;
 }
 
 .teto-score-label {
     position: absolute;
-    right: 8px;
     top: 50%;
     transform: translateY(-50%);
     font-size: 11px;
     font-weight: 700;
     color: var(--text-dark);
+    z-index: 3;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 2px 6px;
+    border-radius: 8px;
 }
 
-/* ── 로딩 ── */
-.loading-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 60vh;
-    gap: 16px;
+.left-score {
+    left: 8px;
 }
 
-.loading-crab {
-    font-size: 48px;
-    animation: bounce 1s infinite;
-}
-
-@keyframes bounce {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-12px);
-    }
+.right-score {
+    right: 8px;
 }
 
 /* ── 반응형 ── */
@@ -748,10 +905,6 @@ onMounted(fetchData)
 
     .stats-grid {
         grid-template-columns: 1fr;
-    }
-
-    .chart-wrapper {
-        height: 220px;
     }
 }
 </style>

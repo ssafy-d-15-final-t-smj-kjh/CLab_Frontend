@@ -36,8 +36,8 @@
                 </div>
                 <div class="mini-stat">
                     <span class="mini-stat-icon">⏱️</span>
-                    <span class="mini-stat-val">{{ formatReplyTime(participant?.average_reply_time) }}</span>
-                    <span class="mini-stat-label">평균 답장</span>
+                    <span class="mini-stat-val">{{ formatReplyTime(participant?.averageReplyTime) }}</span>
+                    <span class="mini-stat-label">평균 답장 시간</span>
                 </div>
                 <div class="mini-stat">
                     <span class="mini-stat-icon">📝</span>
@@ -94,16 +94,16 @@
 
                 <!-- 카테고리 범례 -->
                 <div class="category-legend">
-                    <div v-for="cat in categories" :key="cat.id" class="legend-item">
-                        <span class="legend-dot" :style="{ backgroundColor: categoryColors[cat.id] }"></span>
-                        <span class="legend-name">{{ cat.name }}</span>
+                    <div v-for="category in categories" :key="category.id" class="legend-item">
+                        <span class="legend-dot" :style="{ backgroundColor: categoryColors[category.id] }"></span>
+                        <span class="legend-name">{{ category.name }}</span>
                         <span class="legend-count">
-                            {{ getCategoryCount(cat.id) }}회
+                            {{ getCategoryCount(category.id) }}회
                         </span>
                         <div class="legend-bar">
                             <div class="legend-bar-fill" :style="{
-                                width: getCategoryPercent(cat.id) + '%',
-                                backgroundColor: categoryColors[cat.id] || '#aaaccc'
+                                width: getCategoryPercent(category.id) + '%',
+                                backgroundColor: categoryColors[category.id] || '#aaaccc'
                             }"></div>
                         </div>
                     </div>
@@ -121,10 +121,10 @@
                         @click="selectedFilter = null">
                         전체
                     </button>
-                    <button v-for="cat in categories" :key="cat.id" class="filter-btn"
-                        :class="{ active: selectedFilter === cat.id }" @click="selectedFilter = cat.id"
-                        :style="selectedFilter === cat.id ? { backgroundColor: categoryColors[cat.id], borderColor: categoryColors[cat.id] } : {}">
-                        {{ cat.name }}
+                    <button v-for="category in categories" :key="category.id" class="filter-btn"
+                        :class="{ active: selectedFilter === category.id }" @click="selectedFilter = category.id"
+                        :style="selectedFilter === category.id ? { backgroundColor: categoryColors[category.id], borderColor: categoryColors[category.id] } : {}">
+                        {{ category.name }}
                     </button>
                 </div>
 
