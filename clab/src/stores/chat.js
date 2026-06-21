@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/axios";
+import { chatApi } from "@/api/restApi";
 
 export const useChatStore = defineStore("chat", () => {
     const chats = ref([])
@@ -8,7 +9,7 @@ export const useChatStore = defineStore("chat", () => {
 
     const fetchChats = async () => {
         try {
-            const response = await api.get('/chat/me')
+            const response = await chatApi.getMyChats()
             const apiResponse = response.data
             chats.value = apiResponse.data
         } catch (error) {
@@ -18,7 +19,7 @@ export const useChatStore = defineStore("chat", () => {
 
     const fetchChatInfo = async (chatId) => {
         try {
-            const response = await api.get(`/chat/${chatId}`)
+            const response = await chatApi.getChatInfoById(chatId)
             const apiResponse = response.data
             chatInfo.value = apiResponse.data
         } catch (error) {

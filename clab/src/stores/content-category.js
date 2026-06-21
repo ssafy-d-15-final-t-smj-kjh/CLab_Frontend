@@ -1,13 +1,13 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import api from "@/api/axios";
+import { contentCategoryApi } from "@/api/restApi";
 
 export const useContentCategoryStore = defineStore("content-category", () => {
     const contentCategories = ref([])
 
     const fetchContentCategories = async (contentId) => {
         try {
-            const response = await api.get(`/content-category/content/${contentId}`)
+            const response = await contentCategoryApi.getContentCategoriesByContentId(contentId)
             const apiResponse = response.data
             contentCategories.value.push(...apiResponse.data)
         } catch (error) {

@@ -1,6 +1,8 @@
 <template>
-    <div class="chat-list-page">
+    <LoadingInfo v-if="isLoading" :is-loading="isLoading"/>
+    <RetryInfo v-else-if="error" :message="error" @retry="fetchChats"/>
 
+    <div v-else class="chat-list-page">
         <!-- 헤더 -->
         <header class="page-header">
             <button class="back-btn" @click="router.push('/main')">
@@ -74,6 +76,9 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useChatStore } from '@/stores/chat'
 
+import LoadingInfo from '@/components/LoadingInfo.vue'
+import RetryInfo from '@/components/RetryInfo.vue'
+
 const router = useRouter()
 const chatStore = useChatStore()
 
@@ -103,16 +108,23 @@ const goToDetail = (id) => {
 // ── 데이터 ──────────────────────────────────────────────────
 const { chats } = storeToRefs(chatStore)
 const isLoading = ref(false)
+const error = ref(null)
 
-onMounted(async () => {
+const fetchChats = async () => {
     isLoading.value = true
+    error.value = null
     try {
         await chatStore.fetchChats()
     } catch (e) {
         console.error(e)
+        error.value = '대화 내역을 불러오는 데 실패하였습니다.'
     } finally {
         isLoading.value = false
     }
+}
+
+onMounted(async () => {
+    fetchChats()
 })
 
 </script>

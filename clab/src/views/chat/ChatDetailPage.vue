@@ -101,10 +101,10 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useChatStore } from '@/stores/chat'
-import api from '@/api/axios'
 
 import LoadingInfo from '@/components/LoadingInfo.vue'
 import RetryInfo from '@/components/RetryInfo.vue'
+import { chatApi } from '@/api/restApi'
 
 const router = useRouter()
 const route = useRoute()
@@ -141,7 +141,7 @@ const goToDeleteChat = async () => {
     isLoading.value = true
     error.value = null
     try {
-        await api.delete(`/chat/${chatId}`)
+        await chatApi.deleteChat(chatId)
         alert('대화를 삭제하였습니다.')
         router.push('/chat-list')
     } catch (e) {

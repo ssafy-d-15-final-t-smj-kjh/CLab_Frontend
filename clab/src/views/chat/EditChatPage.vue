@@ -65,7 +65,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useChatStore } from '@/stores/chat'
-import api from '@/api/axios'
+import { chatApi } from '@/api/restApi'
 
 const router = useRouter()
 const route = useRoute()
@@ -124,20 +124,18 @@ const handleSubmit = async () => {
 
     isLoading.value = true
     try {
-        await api.patch(`/chat/${chatId}`, {
+        const dto = {
             "userId": chatInfo.value.userId,
             "createdAt": chatInfo.value.createdAt,
             "updatedAt": Date.now,
             "source": chatInfo.value.source,
             "title": form.title.trim(),
             "content": form.content.trim()
-        })
-
+        }
+        await chatApi.updateChat(chatId, dto)
         chatStore.fetchChatInfo(chatId);
-
         alert('수정이 완료되었습니다.')
-        router.push(`/chat/${chatId}`)
-
+        router.push(`/chat-detail/${chatId}`)
     } catch (error) {
         console.error(error)
         const msg = error.response?.data?.message || '수정 중 오류가 발생했습니다.'

@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import api from "@/api/axios";
+import { personaApi } from "@/api/restApi";
 
 export const usePersonaStore = defineStore("persona", () => {
     const personas = ref([])
@@ -8,7 +8,7 @@ export const usePersonaStore = defineStore("persona", () => {
 
     const fetchPersonas = async () => {
         try {
-            const response = await api.get(`/persona`)
+            const response = await personaApi.getPersonas()
             const apiResponse = response.data
             personas.value = apiResponse.data
         } catch (error) {
@@ -18,7 +18,7 @@ export const usePersonaStore = defineStore("persona", () => {
 
     const fetchPersona = async (personaId) => {
         try {
-            const response = await api.get(`/persona/${personaId}`)
+            const response = await personaApi.getPersonaById(personaId)
             const apiResponse = response.data
             persona.value = apiResponse.data
         } catch (error) {

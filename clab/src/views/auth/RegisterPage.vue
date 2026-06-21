@@ -37,7 +37,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import api from '@/api/axios'
+import { memberApi } from '@/api/restApi'
 
 const router = useRouter()
 
@@ -49,7 +49,7 @@ const usernameError = ref(false)
 const handleRegister = async () => {
     usernameError.value = false
     try {
-        const response = await api.post('/member/join', {
+        const response = await memberApi.createMember({
             email: email.value,
             password: password.value,
             username: username.value

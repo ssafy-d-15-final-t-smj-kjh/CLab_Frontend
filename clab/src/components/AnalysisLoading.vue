@@ -220,7 +220,7 @@ function startTimers() {
     // 1초 tick
     mainTimer = setInterval(() => {
         elapsed.value++
-        if (!isOvertime.value && elapsed.value > props.estimatedSeconds.value) {
+        if (!isOvertime.value && elapsed.value > props. estimatedSeconds.value) {
             isOvertime.value = true
         }
     }, 1000)

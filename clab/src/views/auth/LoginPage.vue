@@ -55,11 +55,11 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import api from '@/api/axios'
 import { useAuthStore } from '@/stores/auth'
 
 import LoadingInfo from '@/components/LoadingInfo.vue'
 import RetryInfo from '@/components/RetryInfo.vue'
+import { authApi } from '@/api/restApi'
 
 const router = useRouter()
 const authStore = useAuthStore();
@@ -75,12 +75,10 @@ const handleLogin = async () => {
     isLoading.value = true
     error.value = null
     try {
-        const response = await api.post('/auth/login',
-            {
-                email: email.value,
-                password: password.value
-            }
-        )
+        const response = await authApi.login({
+            email: email.value,
+            password: password.value
+        })
         const apiResponse = response.data;
         if(apiResponse.status == 200){
             alert('로그인에 성공하였습니다. 연구소 입장을 환영합니다!');
