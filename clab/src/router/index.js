@@ -55,12 +55,12 @@ const routes = [
   component: EditProfilePage,
 },
 {
-  path: '/chat-list',
+  path: '/chat',
   name: 'ChatList',
   component: ChatListPage,
 },
 {
-  path: '/chat-detail/:id',
+  path: '/chat/:chatId',
   name: 'ChatDetail',
   component: ChatDetailPage,
 },

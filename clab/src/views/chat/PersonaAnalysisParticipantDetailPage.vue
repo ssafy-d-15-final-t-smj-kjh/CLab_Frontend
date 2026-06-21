@@ -230,7 +230,7 @@ const chartData = computed(() => categories.value.map(c => getCategoryCount(c.id
 const chartColors = computed(() => categories.value.map(c => categoryColors[c.id]))
 
 const goToList = () => {
-    router.push(`/chat/${chatId}/participant-list`)
+    router.push(`/chat/${chatId}/persona-analysis`)
 }
 
 // ── 색상 ─────────────────────────────────────────────

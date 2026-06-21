@@ -198,7 +198,7 @@ const { participants } = storeToRefs(participantStore)
 const { meetingAnalysis } = storeToRefs(meetingAnalysisStore)
 const { meetingParticipations } = storeToRefs(meetingParticipationStore)
 
-const goToChatDetail = () => router.push(`/chat-detail/${chatId}`)
+const goToChatDetail = () => router.push(`/chat/${chatId}`)
 
 // ── 데이터 페칭 ──────────────────────────────────────────────
 const fetchData = async () => {

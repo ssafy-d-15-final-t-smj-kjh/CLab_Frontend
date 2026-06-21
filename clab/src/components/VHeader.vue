@@ -4,7 +4,7 @@
             <h1 class="logo" @click="goMain">CLab</h1>
             <nav class="nav-menu">
                 <router-link to="/main" class="nav-item" active-class="active">메인</router-link>
-                <router-link to="/chat-list" class="nav-item" active-class="active">대화 목록</router-link>
+                <router-link to="/chat" class="nav-item" active-class="active">대화 목록</router-link>
                 <router-link v-if="isLoggedIn" to="/my-info" class="nav-item" active-class="active">내 정보</router-link>
             </nav>
         </div>

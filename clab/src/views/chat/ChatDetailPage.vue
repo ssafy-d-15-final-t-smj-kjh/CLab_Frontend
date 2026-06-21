@@ -4,7 +4,7 @@
     <div class="chat-detail-page" v-else>
         <!-- 헤더 -->
         <header class="page-header">
-            <button class="back-btn" @click="router.push('/chat-list')">
+            <button class="back-btn" @click="goToChatList">
                 <span class="back-icon">←</span>
             </button>
             <h1 class="page-title">💬 대화 상세</h1>
@@ -118,7 +118,7 @@ const { chatInfo } = storeToRefs(chatStore)
 
 const isLoading = ref(true)
 const error = ref(null)
-const chatId = route.params.id
+const chatId = route.params.chatId
 
 // ── 날짜 포맷 ────────────────────────────────────────────
 const formatTime = (dateStr) => {
@@ -136,7 +136,7 @@ const formatTime = (dateStr) => {
         hour12: true
     })
 }
-const goToChatList = () => router.push(`/chat-list`)
+const goToChatList = () => router.push(`/chat`)
 const goToPersonaAnalysis = () => router.push(`/chat/${chatId}/persona-analysis`)
 const goToMeetingAnalysis = () => router.push(`/chat/${chatId}/meeting-analysis`)
 const goToEditChat = () => router.push(`/edit-chat/${chatId}`)
