@@ -35,9 +35,14 @@ const goMyInfo = () => router.push('/my-info')
 const goLogin = () => router.push('/login')
 
 const logout = () => {
-    authStore.logout();
-    alert('성공적으로 로그아웃 되었습니다.')
-    router.push('/login')
+    const answer = confirm('정말 로그아웃하시겠습니까?')
+    if (answer) {
+        authStore.logout();
+        alert('성공적으로 로그아웃 되었습니다.')
+        router.push('/login')
+    } else {
+        return
+    }
 }
 </script>
 

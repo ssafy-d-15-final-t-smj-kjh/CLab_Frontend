@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { memberApi } from "@/api/restApi";
+import { authApi } from "@/api/restApi";
 import { jwtDecode } from "jwt-decode";
 
 export const useAuthStore = defineStore("auth", () => {
@@ -18,15 +19,29 @@ export const useAuthStore = defineStore("auth", () => {
         }
     })
 
-    const login = (tokens) => {
-        accessToken.value = tokens.accessToken;
+    const login = async (dto) => {
+        const response = await authApi.login(dto)
+        const apiResponse = response.data
+        const tokens = apiResponse.data
+
+        if (!tokens || !tokens.accessToken || !tokens.refreshToken) {
+            console.log('토큰이 없습니다.')
+            return
+        }
+        
         localStorage.setItem("accessToken", tokens.accessToken);
         localStorage.setItem("refreshToken", tokens.refreshToken);
+
+        accessToken.value = tokens.accessToken
+
+        await fetchUserInfo()
+        console.log(userInfo.value)
     };
 
     const logout = () => {
         accessToken.value = null;
         userInfo.value = null;
+
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
     };
@@ -38,13 +53,28 @@ export const useAuthStore = defineStore("auth", () => {
             const response = await memberApi.getMe()
             const apiResponse = response.data;
             userInfo.value = apiResponse.data;
+            console.log('userInfo', userInfo.value)
         } catch (error) {
-            console.error('사용자 정보 조회 실패:', error)
+            console.error('auth.js - fetchUserInfo :', error)
         }
+    }
+
+    const refreshToken = async () => {
+        const response = await authApi.refresh()
+        const apiResponse = response?.data
+        const newAccessToken = apiResponse?.data
+
+        if(!newAccessToken) return
+        
+        localStorage.setItem('accessToken', newAccessToken)
+
+        accessToken.value = newAccessToken;
     }
 
     return { 
         accessToken, userInfo, isLoggedIn, userId, 
-        login, logout, fetchUserInfo 
+        login, logout, fetchUserInfo, refreshToken
     }
+
+    
 });
