@@ -28,7 +28,7 @@ export const useAuthStore = defineStore("auth", () => {
             console.log('토큰이 없습니다.')
             return
         }
-        
+
         localStorage.setItem("accessToken", tokens.accessToken);
 
         accessToken.value = tokens.accessToken
@@ -45,7 +45,7 @@ export const useAuthStore = defineStore("auth", () => {
     };
 
     const fetchUserInfo = async () => {
-        if (!userId.value) return 
+        if (!userId.value) return
 
         try {
             const response = await memberApi.getMe()
@@ -63,19 +63,26 @@ export const useAuthStore = defineStore("auth", () => {
             const apiResponse = response?.data
             const newAccessToken = apiResponse?.data
 
-            if (!newAccessToken) return
-            
+            if (!newAccessToken) {
+                throw new Error('새로운 access 토큰이 없습니다.')
+            }
+
+            console.log('accessToken 발급 완료 :', newAccessToken)
+
             localStorage.setItem('accessToken', newAccessToken)
             accessToken.value = newAccessToken;
+
+            return newAccessToken
         } catch (error) {
             console.log('토큰 재발급 실패 : ', error)
+            throw error
         }
     }
 
-    return { 
-        accessToken, userInfo, isLoggedIn, userId, 
+    return {
+        accessToken, userInfo, isLoggedIn, userId,
         login, logout, fetchUserInfo, refreshToken
     }
 
-    
+
 });
