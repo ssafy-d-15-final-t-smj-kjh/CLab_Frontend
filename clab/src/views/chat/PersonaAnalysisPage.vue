@@ -12,7 +12,7 @@
         </div>
 
         <LoadingInfo v-if="isLoading" :is-loading="isLoading" />
-        <RetryInfo v-else-if="error" :message="error" @retry="fetchParticipants" />
+        <RetryInfo v-else-if="error" :message="error" @retry="fetchData" />
         <div class="container" v-else>
             <p class="chat-title">{{ chatInfo?.title }}</p>
 
@@ -28,7 +28,7 @@
                     <span class="summary-icon">👥</span>
                     <div>
                         <p class="summary-label">참여자 수</p>
-                        <p class="summary-value">{{ participants.length }}명</p>
+                        <p class="summary-value">{{ personaParticipants.length }}명</p>
                     </div>
                 </div>
                 <div class="summary-card">
@@ -130,7 +130,7 @@
                     <p class="section-desc">0점 = 에겐(붉은색), 100점 = 테토(푸른색)</p>
 
                     <div class="teto-distribution">
-                        <div v-for="p in participants" :key="p.id" class="teto-item" @click="goToDetail(p.id)">
+                        <div v-for="p in personaParticipants" :key="p.id" class="teto-item" @click="goToParticipantDetail(p.id)">
                             <span class="teto-name" :title="p.name">{{ p.name }}</span>
 
                             <div class="teto-bar-container">
@@ -183,7 +183,7 @@
                         </button>
                     </div>
 
-                    <div class="chart-wrapper" :style="{ height: Math.max(300, participants.length * 45) + 'px' }">
+                    <div class="chart-wrapper" :style="{ height: Math.max(300, personaParticipants.length * 45) + 'px' }">
                         <canvas ref="barChartRef"></canvas>
                     </div>
                 </div>
@@ -213,11 +213,11 @@ const router = useRouter()
 const chatStore = useChatStore()
 const participantStore = useParticipantStore()
 
-const isLoading = ref(false)
+const isLoading = ref(true)
 const error = ref(null)
 
 const { chatInfo } = storeToRefs(chatStore)
-const { participants } = storeToRefs(participantStore)
+const { personaParticipants } = storeToRefs(participantStore)
 
 const chatId = route.params.chatId
 
@@ -242,27 +242,27 @@ const avatarColors = ['#5bb4c4', '#e8554e', '#f0d9a8', '#a8dadc', '#c41e3a', '#8
 
 // ── 계산값 ──────────────────────────────────────────
 const totalMessages = computed(() =>
-    participants.value.reduce((sum, p) => sum + p.count, 0)
+    personaParticipants.value.reduce((sum, p) => sum + p.count, 0)
 )
 
 const avgReplyTime = computed(() => {
-    const valid = participants.value.filter(p => p.averageReplyTime > 0)
+    const valid = personaParticipants.value.filter(p => p.averageReplyTime > 0)
     if (!valid.length) return '-'
     const avg = valid.reduce((s, p) => s + p.averageReplyTime, 0) / valid.length
     return formatReplyTime(avg)
 })
 
 const rankedParticipants = computed(() =>
-    [...participants.value].sort((a, b) => b.count - a.count)
+    [...personaParticipants.value].sort((a, b) => b.count - a.count)
 )
 
-const maxCount = computed(() => Math.max(...participants.value.map(p => p.count), 1))
-const maxLength = computed(() => Math.max(...participants.value.map(p => p.chatLength), 1))
-const maxReply = computed(() => Math.max(...participants.value.map(p => p.averageReplyTime), 1))
+const maxCount = computed(() => Math.max(...personaParticipants.value.map(p => p.count), 1))
+const maxLength = computed(() => Math.max(...personaParticipants.value.map(p => p.chatLength), 1))
+const maxReply = computed(() => Math.max(...personaParticipants.value.map(p => p.averageReplyTime), 1))
 
 // 차트 정렬용 데이터 (현재 활성화된 탭과 정렬 기준에 맞춰 재정렬)
 const chartSortedParticipants = computed(() => {
-    return [...participants.value].sort((a, b) => {
+    return [...personaParticipants.value].sort((a, b) => {
         let valA = 0, valB = 0;
 
         switch (activeChart.value) {
@@ -414,9 +414,9 @@ const fetchData = async () => {
     error.value = null
     try {
         await chatStore.fetchChatInfo(chatId)
-        await participantStore.fetchParticipants(chatId)
+        await participantStore.fetchPersonaParticipants(chatId)
     } catch (e) {
-        console.error(e)
+        console.error('PersonaAnalysisPage.vue - fetchData :', e)
         error.value = '정보를 불러오는 데 실패하였습니다.'
     } finally {
         isLoading.value = false

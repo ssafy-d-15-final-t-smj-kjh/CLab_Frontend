@@ -62,7 +62,7 @@
                         <h3>📗 페르소나 설명</h3>
                         <p>{{ persona.description }}</p>
                     </div>
-                </div>            
+                </div>
             </div>
 
             <!-- ── 페르소나 분석 ── -->
@@ -344,10 +344,10 @@ function loadMore() {
 }
 
 // ── API 호출 ──────────────────────────────────────────
-async function fetchData() {
+const fetchData = async () => {
+    isLoading.value = true
+    error.value = null
     try {
-        isLoading.value = true
-
         await fetchCategories()
         await fetchParticipantInfo()
         await fetchContents()
@@ -355,9 +355,8 @@ async function fetchData() {
         await fetchParticipantCategories()
         await fetchPersonaAnalysis()
         await fetchPersona()
-
     } catch (e) {
-        console.error(e)
+        console.error('PersonaAnalysisParticipantDetailPage.vue - fetchData :', e)
     } finally {
         isLoading.value = false
     }
