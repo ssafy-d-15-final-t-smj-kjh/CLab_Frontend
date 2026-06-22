@@ -210,8 +210,8 @@ const fetchData = async () => {
         if (meetingAnalysis.value && meetingAnalysis.value.id) {
             await meetingParticipationStore.fetchMeetingParticipations(meetingAnalysis.value.id)
         }
-    } catch (e) {
-        console.error(e)
+    } catch (error) {
+        console.error('MeetingAnalysisPage.vue - fetchData', error)
         error.value = '회의 분석 정보를 불러오는 데 실패하였습니다.'
     } finally {
         isLoading.value = false
@@ -316,7 +316,14 @@ const duration = computed(() => {
     const diff = new Date(meetingAnalysis.value.endedAt) - new Date(meetingAnalysis.value.startedAt)
     const mins = Math.floor(diff / 60000)
     const hours = Math.floor(mins / 60)
-    return hours > 0 ? `${hours}시간 ${mins % 60}분` : `${mins}분`
+    const days = Math.floor(hours / 24)
+    if (days > 0) {
+        return `${days}일 ${hours % 24}시간 ${mins % 60}분`
+    } else if (hours > 0) {
+        return `${hours}시간 ${mins % 60}분` 
+    } else {
+        return `${mins}분`
+    }
 })
 
 const atmosphereClass = computed(() => {

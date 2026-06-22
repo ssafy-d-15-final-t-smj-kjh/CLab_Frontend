@@ -16,14 +16,15 @@
                 </div>
 
                 <label>🦀 닉네임 (Nickname)</label>
-                <div class="input-box" :class="{ error: usernameError }">
+                <div class="input-box">
                     <input type="text" v-model="username" placeholder="닉네임을 입력해주세요" />
-                    <span v-if="usernameError" class="error-mark">❗</span>
                 </div>
-                <p v-if="usernameError" class="error-text">
-                    ⚠️ 이미 사용 중인 닉네임 (Nickname already in use)
-                </p>
 
+                <label>☎️ 전화번호 (Phone-Number)</label>
+                <div class="input-box">
+                    <input type="text" v-model="phoneNumber" placeholder="전화번호를 입력해주세요 010-xxxx-xxxx" />
+                </div>
+                
                 <button type="submit" class="signup-btn">계정 만들기 (Sign Up) 📝</button>
             </form>
 
@@ -44,31 +45,22 @@ const router = useRouter()
 const email = ref('')
 const password = ref('')
 const username = ref('')
-const usernameError = ref(false)
+const phoneNumber = ref('')
 
 const handleRegister = async () => {
-    usernameError.value = false
     try {
         const response = await memberApi.createMember({
             email: email.value,
             password: password.value,
-            username: username.value
+            username: username.value,
+            phoneNumber: phoneNumber.value
         })
         const apiResponse = response.data;
-        if (apiResponse.status == 201) {
-            alert(apiResponse.data);
-            router.push('/login');
-        } else {
-            alert(apiResponse.message);
-        }
+        alert(apiResponse.data);
+        router.push('/login');
     } catch (error) {
         console.error('API 호출 에러:', error);
-        if (error.response && error.response.data) {
-            const errorData = error.response.data;
-            alert(`[${errorData.code}] ${errorData.message}`);
-        } else {
-            alert('회원가입 처리에 실패했습니다. 입력 정보를 확인해주세요.');
-        }
+        alert('회원가입 처리에 실패했습니다. 입력 정보를 확인해주세요.');
     }
 }
 </script>
