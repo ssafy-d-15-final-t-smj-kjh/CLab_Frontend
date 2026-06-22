@@ -11,7 +11,7 @@ export const useContentCategoryStore = defineStore("content-category", () => {
             const apiResponse = response.data
             contentCategories.value.push(...apiResponse.data)
         } catch (error) {
-            console.error('분석 정보 조회 실패:', error)
+            console.error('content-category - fetchContentCategories :', error)
         }
     }
     const clearContentCategories = async () => {

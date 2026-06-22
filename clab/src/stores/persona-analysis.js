@@ -10,8 +10,9 @@ export const usePersonaAnalysisStore = defineStore("persona-analysis", () => {
             const response = await personaAnalysisApi.getPersonaAnalysisByParticipantId(participantId)
             const apiResponse = response.data
             personaAnalysis.value = apiResponse.data
+            console.log(personaAnalysis.value)
         } catch (error) {
-            console.error('분석 정보 조회 실패:', error)
+            console.error('persona-analysis.js - fetchPersonaAnalysis :', error)
         }
     }
 

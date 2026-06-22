@@ -11,7 +11,7 @@ export const useContentStore = defineStore("content", () => {
             const apiResponse = response.data
             contents.value = apiResponse.data
         } catch (error) {
-            console.error('대화 내용 정보 조회 실패:', error)
+            console.error('contents.js - fetchContents :', error)
         }
     }
 

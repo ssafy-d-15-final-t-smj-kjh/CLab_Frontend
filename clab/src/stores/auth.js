@@ -20,21 +20,24 @@ export const useAuthStore = defineStore("auth", () => {
     })
 
     const login = async (dto) => {
-        const response = await authApi.login(dto)
-        const apiResponse = response.data
-        const tokens = apiResponse.data
+        try {
+            const response = await authApi.login(dto)
+            const apiResponse = response.data
+            const tokens = apiResponse.data
 
-        if (!tokens || !tokens.accessToken) {
-            console.log('토큰이 없습니다.')
-            return
+            if (!tokens || !tokens.accessToken) {
+                console.log('토큰이 없습니다.')
+                return
+            }
+
+            localStorage.setItem("accessToken", tokens.accessToken);
+
+            accessToken.value = tokens.accessToken
+
+            await fetchUserInfo()
+        } catch (error) {
+            console.log('auth.js - login :', error)
         }
-        
-        localStorage.setItem("accessToken", tokens.accessToken);
-
-        accessToken.value = tokens.accessToken
-
-        await fetchUserInfo()
-        console.log(userInfo.value)
     };
 
     const logout = async () => {
@@ -45,13 +48,12 @@ export const useAuthStore = defineStore("auth", () => {
     };
 
     const fetchUserInfo = async () => {
-        if (!userId.value) return 
+        if (!userId.value) return
 
         try {
             const response = await memberApi.getMe()
             const apiResponse = response.data;
             userInfo.value = apiResponse.data;
-            console.log('userInfo', userInfo.value)
         } catch (error) {
             console.error('auth.js - fetchUserInfo :', error)
         }
@@ -64,18 +66,18 @@ export const useAuthStore = defineStore("auth", () => {
             const newAccessToken = apiResponse?.data
 
             if (!newAccessToken) return
-            
+
             localStorage.setItem('accessToken', newAccessToken)
             accessToken.value = newAccessToken;
         } catch (error) {
-            console.log('토큰 재발급 실패 : ', error)
+            console.log('auth.js - refreshToken :', error)
         }
     }
 
-    return { 
-        accessToken, userInfo, isLoggedIn, userId, 
+    return {
+        accessToken, userInfo, isLoggedIn, userId,
         login, logout, fetchUserInfo, refreshToken
     }
 
-    
+
 });

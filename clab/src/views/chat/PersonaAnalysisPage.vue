@@ -127,14 +127,14 @@
 
                 <div class="section">
                     <h2 class="section-title">⚡ 테토 에너지 분포</h2>
-                    <p class="section-desc">0점 = 에테르(붉은색), 100점 = 테토(푸른색)</p>
+                    <p class="section-desc">0점 = 에겐(붉은색), 100점 = 테토(푸른색)</p>
 
                     <div class="teto-distribution">
                         <div v-for="p in participants" :key="p.id" class="teto-item" @click="goToDetail(p.id)">
                             <span class="teto-name" :title="p.name">{{ p.name }}</span>
 
                             <div class="teto-bar-container">
-                                <div class="teto-label-left">에테르</div>
+                                <div class="teto-label-left">에겐</div>
 
                                 <div class="teto-bidirectional-wrap">
                                     <div class="teto-side left-side">
@@ -474,9 +474,12 @@ onMounted(fetchData)
 }
 
 .chat-title {
-    margin: 4px 0 0;
-    font-size: 14px;
-    opacity: 0.85;
+    margin: 0 0 16px;
+    padding-bottom: 10px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #000000;
+    border-bottom: 2px solid rgba(0, 119, 182, 0.15);
 }
 
 /* ── 컨테이너 ── */

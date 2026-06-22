@@ -13,7 +13,7 @@ const noAuthUrls = [
 ]
 
 const isNoAuthUrl = (url = '') => {
-  return noAuthUrls.some(noAuthUrl => url.includes(noAuthUrl))
+    return noAuthUrls.some(noAuthUrl => url.includes(noAuthUrl))
 }
 
 api.interceptors.request.use(
@@ -23,7 +23,7 @@ api.interceptors.request.use(
         }
 
         const token = localStorage.getItem('accessToken')
-        
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`
         }
@@ -54,8 +54,8 @@ api.interceptors.response.use(
                     throw new Error('Refresh token이 없습니다.');
                 }
                 const newAccessToken = await authApi.refresh().data.data
-                
-                if(!newAccessToken) {
+
+                if (!newAccessToken) {
                     authStore.logout()
                     alert('세션이 만료되었습니다. 다시 로그인해 주세요.')
                     router.push('/login')
@@ -66,8 +66,8 @@ api.interceptors.response.use(
                 config.headers.Authorization = `Bearer ${newAccessToken}`;
                 return api(config);
 
-            } catch (e) {
-                console.log(e)
+            } catch (error) {
+                console.log('axios.js - interceptors :', error)
                 authStore.logout()
                 alert('세션이 만료되었습니다. 다시 로그인해 주세요.')
                 router.push('/login')

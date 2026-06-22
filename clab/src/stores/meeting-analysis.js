@@ -10,9 +10,8 @@ export const useMeetingAnalysisStore = defineStore("meeting-analysis", () => {
             const response = await meetingAnalysisApi.getMeetingAnalysisByChatId(chatId)
             const apiResponse = response.data
             meetingAnalysis.value = apiResponse.data
-            console.log('meetingAnalysis', meetingAnalysis)
         } catch (error) {
-            console.error('분석 정보 조회 실패:', error)
+            console.error('meeting-analysis.js - fetchMeetingAnalysis :', error)
         }
     }
 

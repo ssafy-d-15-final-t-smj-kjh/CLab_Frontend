@@ -4,65 +4,65 @@ export const authApi = {
     login: (data) => api.post("/auth/login", data),
     refresh: () => {
         return api.post("/auth/refresh", {}, {
-            withCredentials: true 
+            withCredentials: true
         });
     },
-    logout : () => api.post("/auth/logout"),
+    logout: () => api.post("/auth/logout"),
 }
 
 export const memberApi = {
-    getMe : () => api.get('/member/me'),
-    createMember : (data) => api.post("/member/join", data),
-    updateMember : (id, data) => api.put(`/member/${id}`, data),
+    getMe: () => api.get('/member/me'),
+    createMember: (data) => api.post("/member/join", data),
+    updateMember: (data) => api.patch(`/member/me`, data),
 }
 
 export const chatApi = {
-    getMyChats : () => api.get('/chat/me'),
-    getChatInfoById : (chatId) => api.get(`chat/${chatId}`),
-    uploadChat : (formData) => api.post('/chat', formData),
-    updateChat : (chatId, data) => api.patch(`/chat/${chatId}`, data),
-    deleteChat : (chatId) => api.delete(`chat/${chatId}`)
+    getMyChats: () => api.get('/chat/me'),
+    getChatInfoById: (chatId) => api.get(`chat/${chatId}`),
+    uploadChat: (formData) => api.post('/chat', formData),
+    updateChat: (chatId, data) => api.patch(`/chat/${chatId}`, data),
+    deleteChat: (chatId) => api.delete(`chat/${chatId}`)
 }
 
 export const participantApi = {
-    getParticipantsInChat : (chatId) => api.get(`/participant/chat/${chatId}`),
-    getParticipantInfoById : (participantId) => api.get(`/participant/${participantId}`)
+    getParticipantsInChat: (chatId) => api.get(`/participant/chat/${chatId}`),
+    getParticipantInfoById: (participantId) => api.get(`/participant/${participantId}`)
 
 }
 
 export const personaAnalysisApi = {
-    getPersonaAnalysisByParticipantId : (participantId) => api.get(`/persona-analysis/participant/${participantId}`),
+    getPersonaAnalysisByParticipantId: (participantId) => api.get(`/persona-analysis/participant/${participantId}`),
 }
 
 export const personaApi = {
-    getPersonas : () => api.get(`/persona`),
+    getPersonas: () => api.get(`/persona`),
     getPersonaById: (personaId) => api.get(`/persona/${personaId}`)
 }
 
 export const categoryApi = {
-    getCategories : () => api.get("/category"),
-    getCategoryById : (id) => api.get(`/category/${id}`),
-    createCategory : (data) => api.post("/category", data),
-    updateCategory : (id, data) => api.patch(`/category/${id}`, data),
-    deleteCategory : (id) => api.delete(`/category/${id}`),
+    getCategories: () => api.get("/category"),
+    getCategoryById: (id) => api.get(`/category/${id}`),
+    createCategory: (data) => api.post("/category", data),
+    updateCategory: (id, data) => api.patch(`/category/${id}`, data),
+    deleteCategory: (id) => api.delete(`/category/${id}`),
 }
 
 export const contentCategoryApi = {
-    getContentCategoriesByContentId : (contentId) => api.get(`/content-category/content/${contentId}`),
+    getContentCategoriesByContentId: (contentId) => api.get(`/content-category/content/${contentId}`),
 }
 
 export const participantCategoryApi = {
-    getParticipantCategories : (participantId) => api.get(`/participant-category/participant/${participantId}`),
+    getParticipantCategories: (participantId) => api.get(`/participant-category/participant/${participantId}`),
 }
 
 export const contentApi = {
-    getContentsByParticipantId : (participantId) => api.get(`/content/participant/${participantId}`),
+    getContentsByParticipantId: (participantId) => api.get(`/content/participant/${participantId}`),
 }
 
 export const meetingAnalysisApi = {
-    getMeetingAnalysisByChatId : (chatId) => api.get(`/meeting-analysis/chat/${chatId}`),
+    getMeetingAnalysisByChatId: (chatId) => api.get(`/meeting-analysis/chat/${chatId}`),
 }
 
 export const meetingParticipationApi = {
-    getMeetingParticipationByMeetingAnalysisId : (meetingAnalysisId) => api.get(`/meeting-participation/meeting-analysis/${meetingAnalysisId}`),
+    getMeetingParticipationByMeetingAnalysisId: (meetingAnalysisId) => api.get(`/meeting-participation/meeting-analysis/${meetingAnalysisId}`),
 }
