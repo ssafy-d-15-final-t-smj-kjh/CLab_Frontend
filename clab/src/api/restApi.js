@@ -26,8 +26,9 @@ export const chatApi = {
 
 export const participantApi = {
     getParticipantsInChat: (chatId) => api.get(`/participant/chat/${chatId}`),
-    getParticipantInfoById: (participantId) => api.get(`/participant/${participantId}`)
-
+    getParticipantInfoById: (participantId) => api.get(`/participant/${participantId}`),
+    getParticipantsInPersonaAnalysis : (chatId) => api.get(`/participant/persona/${chatId}`),
+    getParticipantsInMeetingAnalysis : (chatId) => api.get(`/participant/meeting/${chatId}`)
 }
 
 export const personaAnalysisApi = {

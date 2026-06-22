@@ -5,6 +5,8 @@ import { participantApi, personaAnalysisApi } from "@/api/restApi";
 export const useParticipantStore = defineStore("participant", () => {
     const participants = ref([])
     const participant = ref(null)
+    const personaParticipants = ref([])
+    const meetingParticipants = ref([])
 
     const fetchParticipants = async (chatId) => {
         try {
@@ -47,8 +49,29 @@ export const useParticipantStore = defineStore("participant", () => {
 
     const clearParticipantInfo = () => { participant.value = null }
 
+    const fetchPersonaParticipants = async (chatId) => {
+        try {
+            const response = await participantApi.getParticipantsInPersonaAnalysis(chatId)
+            const apiResponse = response.data
+            personaParticipants.value = apiResponse.data
+        } catch (error) {
+            console.log('participant.js - fetchPersonaParticipants :', error)
+        }
+    }
+
+    const fetchMeetingParticipants = async (chatId) => {
+        try {
+            const response = await participantApi.getParticipantsInMeetingAnalysis(chatId)
+            const apiResponse = response.data
+            meetingParticipants.value = apiResponse.data
+        } catch (error) {
+            console.log('participant.js - fetchMeetingParticipants :', error)
+        }
+    }
+
     return {
-        participants, participant,
-        fetchParticipants, fetchParticipantInfo, clearParticipantInfo
+        participants, participant, personaParticipants, meetingParticipants,
+        fetchParticipants, fetchParticipantInfo, 
+        clearParticipantInfo, fetchPersonaParticipants, fetchMeetingParticipants
     }
 });
