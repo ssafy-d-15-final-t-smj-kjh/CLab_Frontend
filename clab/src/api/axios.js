@@ -1,12 +1,27 @@
 import axios from 'axios'
 import router from '@/router'
+import { authApi } from "./restApi"
 
 const api = axios.create({
     baseURL: 'http://localhost:8080'
 })
 
+const noAuthUrls = [
+    '/auth/login',
+    '/auth/refresh',
+    '/member/join',
+]
+
+const isNoAuthUrl = (url = '') => {
+  return noAuthUrls.some(noAuthUrl => url.includes(noAuthUrl))
+}
+
 api.interceptors.request.use(
     config => {
+        if (isNoAuthUrl(config.url)) {
+            return config
+        }
+
         const token = localStorage.getItem('accessToken')
         
         if (token) {
@@ -14,7 +29,8 @@ api.interceptors.request.use(
         }
 
         return config
-    }
+    },
+    error => Promise.reject(error)
 )
 
 api.interceptors.response.use(
@@ -24,9 +40,12 @@ api.interceptors.response.use(
     async (error) => {
         const { config, response } = error;
 
+        // 1. 응답이 없거나 401 에러가 아닌 경우 원래 에러 반환
         if (!response || response.status !== 401) {
             return Promise.reject(error);
         }
+
+        const backendMessage = response.data.message || '알 수 없는 오류가 발생했습니다.';
 
         if (response.data.code === 'ERR-AUTH-002') {
             try {
@@ -34,37 +53,31 @@ api.interceptors.response.use(
                 if (!refreshToken) {
                     throw new Error('Refresh token이 없습니다.');
                 }
-
-                const refreshResponse = await axios.post('http://localhost:8080/auth/refresh', {
-                    'Refresh-Token': refreshToken
-                });
-
-                const apiResponse = refreshResponse.data;
-                const newAccessToken = apiResponse.data;
-                localStorage.setItem('accessToken', newAccessToken);
+                const newAccessToken = await authApi.refresh().data.data
+                
+                if(!newAccessToken) {
+                    authStore.logout()
+                    alert('세션이 만료되었습니다. 다시 로그인해 주세요.')
+                    router.push('/login')
+                }
+                console.log('newAccessToken 발급 완료', newAccessToken)
+                localStorage.setItem('accessToken', newAccessToken)
 
                 config.headers.Authorization = `Bearer ${newAccessToken}`;
                 return api(config);
 
-            } catch (refreshError) {
-                return handleUnauthorized('세션이 만료되었습니다. 다시 로그인해 주세요.');
+            } catch (e) {
+                console.log(e)
+                authStore.logout()
+                alert('세션이 만료되었습니다. 다시 로그인해 주세요.')
+                router.push('/login')
             }
+        } else {
+            alert(backendMessage)
+            router.push('/login')
         }
-        return handleUnauthorized('로그인 후 이용해 주세요.😊');
     }
-)
-
-const handleUnauthorized = (message) => {
-    console.warn(message);
-
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    
-    alert(message);
-    router.push('/login'); 
-    
-    return Promise.reject(new Error(message));
-}
+);
 
 export default api
 

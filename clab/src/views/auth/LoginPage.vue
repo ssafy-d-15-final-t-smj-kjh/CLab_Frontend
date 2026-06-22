@@ -1,6 +1,5 @@
 <template>
     <LoadingInfo v-if="isLoading" :is-loading="isLoading"/>
-    <RetryInfo v-else-if="error" :message="error" @retry="handleLogin"/>
     <div class="login-wrapper">
         <div class="bubble bubble1"></div>
         <div class="bubble bubble2"></div>
@@ -13,11 +12,6 @@
             <h1 class="brand">CLab</h1>
             <p class="subtitle">연구소 입장하기</p>
             <p class="subtitle-en">(Welcome Back)</p>
-
-            <div v-if="showError" class="error-box">
-                <span class="error-icon">❗</span>
-                <span>이메일 또는 비밀번호가 틀렸습니다.<br />(Incorrect credentials. Try again!)</span>
-            </div>
 
             <form class="login-form" @submit.prevent="handleLogin">
                 <label>이메일 (Email)</label>
@@ -42,12 +36,7 @@
 
             <div class="social-row">
                 <button class="social-btn register" @click="goToRegister">🧪 회원가입</button>
-                <!-- <button class="social-btn beach">🏖️ Beach</button> -->
             </div>
-
-            <!-- <p class="register-link">
-                연구원이 아니신가요? <router-link to="/register">연구소 지원하기</router-link>
-            </p> -->
         </div>
     </div>
 </template>
@@ -58,47 +47,26 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 import LoadingInfo from '@/components/LoadingInfo.vue'
-import RetryInfo from '@/components/RetryInfo.vue'
-import { authApi } from '@/api/restApi'
 
 const router = useRouter()
 const authStore = useAuthStore();
 
 const isLoading = ref(false)
-const error = ref(null)
 
 const email = ref('')
 const password = ref('')
-const showError = ref(false)
 
 const handleLogin = async () => {
     isLoading.value = true
-    error.value = null
     try {
-        const response = await authApi.login({
+        await authStore.login({
             email: email.value,
             password: password.value
         })
-        const apiResponse = response.data;
-        if(apiResponse.status == 200){
-            alert('로그인에 성공하였습니다. 연구소 입장을 환영합니다!');
-            showError.value = false;
-
-            await authStore.login(apiResponse.data)
-            await authStore.fetchUserInfo();
-            
-            router.push('/main');
-        } else {
-            alert(apiResponse.message);
-        }
+        alert('로그인에 성공하였습니다!')
+        goToMain()
     } catch (e) {
         console.error('API 호출 에러:', e);
-        if (e.response && e.response.data) {
-            const errorData = e.response.data;
-            alert(`[${errorData.code}] ${errorData.message}`);
-        } else {
-            alert('로그인에 실패했습니다. 입력 정보를 확인해주세요.');
-        }
     } finally {
         isLoading.value = false
     }
@@ -106,6 +74,10 @@ const handleLogin = async () => {
 
 const goToRegister = () => {
     router.push('/register')
+}
+
+const goToMain = () => {
+    router.push('/main')
 }
 </script>
 

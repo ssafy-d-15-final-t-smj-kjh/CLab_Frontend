@@ -2,12 +2,9 @@
   <header>
     <VHeader />
   </header>
-  <LoadingInfo v-if="isLoading" :is-loading="isLoading"/>
-  <div v-if="isLoading">
-    <h1>로딩 중입니다...</h1>
-  </div>
-  <RouterView v-else/>
-
+  <LoadingInfo v-if="isLoading" :is-loading="isLoading" />
+  <RetryInfo v-else-if="error" :message="error" @retry="fetchData" />
+  <RouterView v-else />
   <footer>
     <VFooter />
   </footer>
@@ -15,9 +12,11 @@
 
 <script setup>
 import { RouterView } from 'vue-router';
+
 import VHeader from './components/VHeader.vue';
 import VFooter from './components/VFooter.vue';
 import LoadingInfo from './components/LoadingInfo.vue';
+import RetryInfo from './components/RetryInfo.vue';
 
 import { ref, onMounted } from 'vue';
 
@@ -28,20 +27,22 @@ const authStore = useAuthStore()
 const isLoading = ref(false)
 const error = ref(null)
 
-const fetchUserInfo = async () => {
+const fetchData = async () => {
   isLoading.value = true
   error.value = null
   try {
+    await authStore.refreshToken()
     await authStore.fetchUserInfo()
   } catch (e) {
     console.log(e)
+    await authStore.logout()
   } finally {
     isLoading.value = false
   }
 }
 
 onMounted(
-  fetchUserInfo
+  fetchData
 )
 </script>
 

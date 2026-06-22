@@ -335,7 +335,7 @@ const executeUpload = async () => {
         const chatId = apiResponse.data.id
 
         alert('업로드가 완료되었습니다! 분석 결과를 확인해보세요 🦀')
-        router.push(`/chat-detail/${chatId}`)
+        router.push(`/chat/${chatId}`)
 
     } catch (error) {
         console.error(error)

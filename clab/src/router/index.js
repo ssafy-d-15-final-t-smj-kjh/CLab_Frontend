@@ -17,7 +17,7 @@ import PersonaAnalysisPage from "@/views/chat/PersonaAnalysisPage.vue";
 const routes = [
 {
   path: '/',
-  redirect: '/login'
+  redirect: '/main'
 },
 {
   path: '/find-email',
