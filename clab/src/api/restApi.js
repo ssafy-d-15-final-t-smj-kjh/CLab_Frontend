@@ -3,17 +3,9 @@ import api from "./axios";
 export const authApi = {
     login: (data) => api.post("/auth/login", data),
     refresh: () => {
-        const refreshToken = localStorage.getItem('refreshToken')
-
-        if (!refreshToken) return
-        
-        return api.post("/auth/refresh", {},
-            {
-                headers: {
-                    'Refresh-Token': localStorage.getItem('refreshToken')
-                }
-            }
-        )
+        return api.post("/auth/refresh", {}, {
+            withCredentials: true 
+        });
     },
     logout : () => api.post("/auth/logout"),
 }

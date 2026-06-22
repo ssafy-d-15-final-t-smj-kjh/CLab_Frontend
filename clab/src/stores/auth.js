@@ -24,13 +24,12 @@ export const useAuthStore = defineStore("auth", () => {
         const apiResponse = response.data
         const tokens = apiResponse.data
 
-        if (!tokens || !tokens.accessToken || !tokens.refreshToken) {
+        if (!tokens || !tokens.accessToken) {
             console.log('토큰이 없습니다.')
             return
         }
         
         localStorage.setItem("accessToken", tokens.accessToken);
-        localStorage.setItem("refreshToken", tokens.refreshToken);
 
         accessToken.value = tokens.accessToken
 
@@ -38,12 +37,11 @@ export const useAuthStore = defineStore("auth", () => {
         console.log(userInfo.value)
     };
 
-    const logout = () => {
+    const logout = async () => {
         accessToken.value = null;
         userInfo.value = null;
 
         localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
     };
 
     const fetchUserInfo = async () => {
@@ -60,15 +58,18 @@ export const useAuthStore = defineStore("auth", () => {
     }
 
     const refreshToken = async () => {
-        const response = await authApi.refresh()
-        const apiResponse = response?.data
-        const newAccessToken = apiResponse?.data
+        try {
+            const response = await authApi.refresh()
+            const apiResponse = response?.data
+            const newAccessToken = apiResponse?.data
 
-        if(!newAccessToken) return
-        
-        localStorage.setItem('accessToken', newAccessToken)
-
-        accessToken.value = newAccessToken;
+            if (!newAccessToken) return
+            
+            localStorage.setItem('accessToken', newAccessToken)
+            accessToken.value = newAccessToken;
+        } catch (error) {
+            console.log('토큰 재발급 실패 : ', error)
+        }
     }
 
     return { 
