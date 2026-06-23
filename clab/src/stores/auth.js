@@ -48,8 +48,6 @@ export const useAuthStore = defineStore("auth", () => {
     };
 
     const fetchUserInfo = async () => {
-        if (!userId.value) return
-
         try {
             const response = await memberApi.getMe()
             const apiResponse = response.data;

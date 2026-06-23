@@ -1,6 +1,7 @@
 import axios from 'axios'
 import router from '@/router'
 import { authApi } from "./restApi"
+import { useAuthStore } from "@/stores/auth"
 
 const api = axios.create({
     baseURL: 'http://localhost:8080'
@@ -45,6 +46,7 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
+        const authStore = useAuthStore()
         const backendMessage = response.data.message || '알 수 없는 오류가 발생했습니다.';
 
         if (response.data.code === 'ERR-AUTH-002') {

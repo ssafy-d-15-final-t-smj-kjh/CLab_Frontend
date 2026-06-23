@@ -1,5 +1,7 @@
 <template>
-    <div class="upload-page">
+    <LoadingInfo v-if="isLoading" :is-loading="isLoading"/>
+    <RetryInfo v-else-if="error" :message="error" @retry="fetchData"/>
+    <div v-else class="upload-page">
 
         <!-- 헤더 -->
         <header class="page-header">
@@ -174,18 +176,23 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 
 import AnticipatedTimeModal from '@/components/AnticipatedTimeModal.vue'
 import AnalysisLoading from '@/components/AnalysisLoading.vue'
+import LoadingInfo from '@/components/LoadingInfo.vue'
+import RetryInfo from '@/components/RetryInfo.vue'
 import { chatApi } from '@/api/restApi'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const { userInfo } = storeToRefs(authStore)
+
+const isLoading = ref(true)
+const error = ref(null)
 
 // ── 상태 ────────────────────────────────────────────────────
 const fileInput = ref(null)
@@ -194,7 +201,6 @@ const fileContent = ref('')
 const isDragging = ref(false)
 const selectedCategory = ref('EMOTION')   // 기본값 : 성격 분석
 const showTimeModal = ref(false)
-const isLoading = ref(false)
 
 // ✨ [신규] 제목 및 내용 폼 상태 추가 ───────────────────────────
 const form = reactive({
@@ -345,6 +351,24 @@ const executeUpload = async () => {
         isLoading.value = false
     }
 }
+
+const fetchData = async () => {
+    isLoading.value = true
+    error.value = null
+    try {
+        await authStore.fetchUserInfo()
+    } catch (e) {
+        console.log('UploadChatPage.vue - fetchData :', e)
+    } finally {
+        isLoading.value = false
+    }
+}
+
+onMounted(
+    async () => {
+        await fetchData()
+    }
+)
 </script>
 
 <style scoped>
