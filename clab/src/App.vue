@@ -27,23 +27,6 @@ const authStore = useAuthStore()
 const isLoading = ref(false)
 const error = ref(null)
 
-const fetchData = async () => {
-  isLoading.value = true
-  error.value = null
-  try {
-    await authStore.refreshToken()
-    await authStore.fetchUserInfo()
-  } catch (e) {
-    console.log(e)
-    await authStore.logout()
-  } finally {
-    isLoading.value = false
-  }
-}
-
-onMounted(
-  fetchData
-)
 </script>
 
 <style scoped></style>

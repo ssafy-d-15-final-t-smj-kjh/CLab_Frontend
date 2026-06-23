@@ -2,11 +2,7 @@ import api from "./axios";
 
 export const authApi = {
     login: (data) => api.post("/auth/login", data),
-    refresh: () => {
-        return api.post("/auth/refresh", {}, {
-            withCredentials: true
-        });
-    },
+    refresh: () => api.post("/auth/refresh", {}, { withCredentials: true }),
     logout: () => api.post("/auth/logout"),
 }
 
@@ -27,8 +23,8 @@ export const chatApi = {
 export const participantApi = {
     getParticipantsInChat: (chatId) => api.get(`/participant/chat/${chatId}`),
     getParticipantInfoById: (participantId) => api.get(`/participant/${participantId}`),
-    getParticipantsInPersonaAnalysis : (chatId) => api.get(`/participant/persona/${chatId}`),
-    getParticipantsInMeetingAnalysis : (chatId) => api.get(`/participant/meeting/${chatId}`)
+    getParticipantsInPersonaAnalysis: (chatId) => api.get(`/participant/persona/${chatId}`),
+    getParticipantsInMeetingAnalysis: (chatId) => api.get(`/participant/meeting/${chatId}`)
 }
 
 export const personaAnalysisApi = {

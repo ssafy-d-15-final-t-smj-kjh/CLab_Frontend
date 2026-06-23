@@ -35,6 +35,8 @@ export const useAuthStore = defineStore("auth", () => {
             accessToken.value = tokens.accessToken
 
             await fetchUserInfo()
+
+            return true
         } catch (error) {
             console.log('auth.js - login :', error)
         }
@@ -68,7 +70,8 @@ export const useAuthStore = defineStore("auth", () => {
             if (!newAccessToken) return
 
             localStorage.setItem('accessToken', newAccessToken)
-            accessToken.value = newAccessToken;
+            accessToken.value = newAccessToken
+            return newAccessToken
         } catch (error) {
             console.log('auth.js - refreshToken :', error)
         }

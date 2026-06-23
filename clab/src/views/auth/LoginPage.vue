@@ -59,12 +59,14 @@ const password = ref('')
 const handleLogin = async () => {
     isLoading.value = true
     try {
-        await authStore.login({
+        const loginResult = await authStore.login({
             email: email.value,
             password: password.value
         })
-        alert('로그인에 성공하였습니다!')
-        goToMain()
+        if (loginResult) {
+            alert('로그인에 성공하였습니다!')
+            goToMain()
+        }
     } catch (e) {
         console.error('API 호출 에러:', e);
     } finally {
