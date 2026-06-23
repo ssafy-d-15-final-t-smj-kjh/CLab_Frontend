@@ -13,7 +13,7 @@ export const authApi = {
 export const memberApi = {
     getMe: () => api.get('/member/me'),
     createMember: (data) => api.post("/member/join", data),
-    updateMember: (data) => api.patch(`/member/me`, data),
+    updateMember: (formData) => api.patch(`/member/me`, formData),
 }
 
 export const chatApi = {
@@ -27,8 +27,8 @@ export const chatApi = {
 export const participantApi = {
     getParticipantsInChat: (chatId) => api.get(`/participant/chat/${chatId}`),
     getParticipantInfoById: (participantId) => api.get(`/participant/${participantId}`),
-    getParticipantsInPersonaAnalysis : (chatId) => api.get(`/participant/persona/${chatId}`),
-    getParticipantsInMeetingAnalysis : (chatId) => api.get(`/participant/meeting/${chatId}`)
+    getParticipantsInPersonaAnalysis: (chatId) => api.get(`/participant/persona/${chatId}`),
+    getParticipantsInMeetingAnalysis: (chatId) => api.get(`/participant/meeting/${chatId}`)
 }
 
 export const personaAnalysisApi = {
