@@ -15,7 +15,7 @@ export const memberApi = {
 }
 
 export const chatApi = {
-    getMyChats: () => api.get('/chat/me'),
+    getMyChats: (pageRequestDto) => api.get('/chat/me', { params: pageRequestDto }),
     getChatInfoById: (chatId) => api.get(`chat/${chatId}`),
     uploadChat: (formData) => api.post('/chat', formData),
     updateChat: (chatId, data) => api.patch(`/chat/${chatId}`, data),

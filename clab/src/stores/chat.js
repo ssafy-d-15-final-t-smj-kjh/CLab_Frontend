@@ -4,13 +4,16 @@ import { chatApi } from "@/api/restApi";
 
 export const useChatStore = defineStore("chat", () => {
     const chats = ref([])
+    const totalCount = ref(null)
     const chatInfo = ref(null)
 
-    const fetchChats = async () => {
+    const fetchChats = async (pageRequestDto) => {
         try {
-            const response = await chatApi.getMyChats()
+            const response = await chatApi.getMyChats(pageRequestDto)
             const apiResponse = response.data
-            chats.value = apiResponse.data
+            const map = apiResponse.data
+            chats.value = map.chats
+            totalCount.value = map.totalCount
         } catch (error) {
             console.error('chat.js - fetchChats :', error)
         }

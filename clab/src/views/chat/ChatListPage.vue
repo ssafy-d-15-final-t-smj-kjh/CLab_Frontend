@@ -1,6 +1,6 @@
 <template>
-    <LoadingInfo v-if="isLoading" :is-loading="isLoading"/>
-    <RetryInfo v-else-if="error" :message="error" @retry="fetchChats"/>
+    <LoadingInfo v-if="isLoading" :is-loading="isLoading" />
+    <RetryInfo v-else-if="error" :message="error" @retry="fetchChats" />
 
     <div v-else class="chat-list-page">
         <!-- 헤더 -->
@@ -14,7 +14,6 @@
 
         <div class="content-wrapper">
 
-            <!-- 상단 요약 -->
             <div class="summary-banner">
                 <span class="summary-icon">🦀</span>
                 <span class="summary-text">
@@ -26,21 +25,31 @@
                 </button>
             </div>
 
-            <div class="tabs-container">
-                <button 
-                    v-for="tab in tabs" 
-                    :key="tab.value"
-                    class="tab-btn"
-                    :class="{ 'active': activeTab === tab.value }"
-                    @click="activeTab = tab.value"
-                >
-                    {{ tab.label }}
-                </button>
+            <div class="controls-container">
+
+                <div class="tabs-container">
+                    <button v-for="tab in tabs" :key="tab.value" class="tab-btn"
+                        :class="{ 'active': activeTab === tab.value }" @click="activeTab = tab.value">
+                        {{ tab.label }}
+                    </button>
+                </div>
+
+                <div class="sort-container">
+                    <select v-model="pageRequestDto.sortBy" @change="onSortChange" class="sort-select">
+                        <option value="createdAt">시간순</option>
+                        <option value="title">이름순</option>
+                    </select>
+                    <select v-model="pageRequestDto.sortOrder" @change="onSortChange" class="sort-select">
+                        <option value="DESC">내림차순</option>
+                        <option value="ASC">오름차순</option>
+                    </select>
+                </div>
+
             </div>
 
 
             <!-- 목록 없을 때 -->
-            <div v-if="filteredChats.length === 0" class="empty-state">
+            <div v-if="chats.length === 0" class="empty-state">
                 <span class="empty-icon">🌊</span>
                 <p class="empty-title">
                     {{ activeTab === 'ALL' ? '아직 대화가 없어요' : '해당 카테고리의 대화가 없어요' }}
@@ -53,9 +62,8 @@
             </div>
 
             <ul v-else class="chat-list">
-                <li v-for="chat in filteredChats" :key="chat.id" class="chat-card" @click="goToDetail(chat.id)">
-                    <div class="card-badge" :class="chat.category.toLowerCase()">
-                        <!-- <span class="badge-number">{{ chat.id }}</span> -->
+                <li v-for="chat in chats" :key="chat.id" class="chat-card" @click="goToDetail(chat.id)">
+                    <div class="card-badge" :class="chat.category?.toLowerCase()">
                         <span class="badge-category">{{ chat.category === 'EMOTION' ? '페르소나' : '회의' }}</span>
                     </div>
 
@@ -85,7 +93,7 @@
 
 <script setup>
 import { storeToRefs } from 'pinia'
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useChatStore } from '@/stores/chat'
 
@@ -108,48 +116,48 @@ const formatTime = (dateStr) => {
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
-        // second: '2-digit',
         hour12: true
     })
 }
 
 // 💡 탭 필터링 로직 추가
 // ════════════════════════════════════════════════════════════
-const activeTab = ref('ALL') // 초기 탭 설정: 'ALL', 'EMOTION', 'MEETING'
+const activeTab = ref('ALL')
 
-// 탭 목록 정의
 const tabs = [
     { label: '전체', value: 'ALL' },
     { label: '페르소나 분석', value: 'EMOTION' },
     { label: '회의 분석', value: 'MEETING' }
 ]
 
-// 활성화된 탭에 따라 목록을 걸러주는 Computed 속성
-const filteredChats = computed(() => {
-    if (activeTab.value === 'ALL') {
-        return chats.value
-    }
-    return chats.value.filter(chat => chat.category === activeTab.value)
-})
-
-// ── 상세 이동 ───────────────────────────────────────────────
 const goToDetail = (chatId) => {
     router.push(`/chat/${chatId}`)
 }
 
-// ── 데이터 ──────────────────────────────────────────────────
 const isLoading = ref(false)
 const error = ref(null)
 
 const { chats } = storeToRefs(chatStore)
 
+const pageRequestDto = reactive({
+    page: 1,
+    size: 10,
+    sortBy: 'createdAt',
+    sortOrder: 'DESC'
+})
+
+const onSortChange = () => {
+    pageRequestDto.offset = 0;
+    fetchChats();
+}
+
 const fetchChats = async () => {
     isLoading.value = true
     error.value = null
     try {
-        await chatStore.fetchChats()
+        await chatStore.fetchChats(pageRequestDto)
     } catch (e) {
-        console.error(e)
+        console.error('ChatListPage.vue - fetchChats :', e)
         error.value = '대화 내역을 불러오는 데 실패하였습니다.'
     } finally {
         isLoading.value = false
@@ -163,20 +171,19 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* ── 페이지 ─────────────────────────────────────────────── */
+/* ── 페이지 & 헤더 (기존 유지) ─────────────────────────────── */
 .chat-list-page {
     min-height: 100vh;
-    background: var(--sand-light);
+    background: var(--sand-light, #f5f0e6);
 }
 
-/* ── 헤더 ───────────────────────────────────────────────── */
 .page-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    background: var(--white);
-    border-bottom: 2px solid var(--sand-dark);
+    background: var(--white, #ffffff);
+    border-bottom: 2px solid var(--sand-dark, #d8ccb8);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -184,7 +191,7 @@ onMounted(async () => {
 }
 
 .back-btn {
-    background: var(--sand);
+    background: var(--sand, #f0e6d2);
     border: none;
     width: 40px;
     height: 40px;
@@ -197,25 +204,25 @@ onMounted(async () => {
 }
 
 .back-btn:hover {
-    background: var(--sand-dark);
+    background: var(--sand-dark, #d8ccb8);
 }
 
 .back-icon {
     font-size: 18px;
-    color: var(--text-dark);
+    color: var(--text-dark, #333333);
 }
 
 .page-title {
     font-size: 18px;
     font-weight: 700;
-    color: var(--text-dark);
+    color: var(--text-dark, #333333);
 }
 
 .header-spacer {
     width: 40px;
 }
 
-/* ── 콘텐츠 ─────────────────────────────────────────────── */
+/* ── 콘텐츠 & 배너 (기존 유지) ─────────────────────────────── */
 .content-wrapper {
     max-width: 600px;
     margin: 0 auto;
@@ -225,40 +232,28 @@ onMounted(async () => {
     gap: 16px;
 }
 
-/* ── 요약 배너 ──────────────────────────────────────────── */
 .summary-banner {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: linear-gradient(135deg, var(--ocean-blue), var(--sky-blue));
-    color: var(--white);
+    background: linear-gradient(135deg, var(--ocean-blue, #0077b6), var(--sky-blue, #00b4d8));
+    color: var(--white, #ffffff);
     padding: 14px 20px;
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(91, 180, 196, 0.3);
 }
 
-.summary-icon {
-    font-size: 22px;
-}
-
-.summary-text {
-    flex: 1;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.summary-text strong {
-    font-size: 18px;
-    font-weight: 800;
-}
+.summary-icon { font-size: 22px; }
+.summary-text { flex: 1; font-size: 14px; font-weight: 500; }
+.summary-text strong { font-size: 18px; font-weight: 800; }
 
 .btn-upload {
     display: flex;
     align-items: center;
     gap: 6px;
     padding: 8px 16px;
-    background: var(--white);
-    color: var(--ocean-blue);
+    background: var(--white, #ffffff);
+    color: var(--ocean-blue, #0077b6);
     border: none;
     border-radius: 20px;
     font-size: 13px;
@@ -274,97 +269,37 @@ onMounted(async () => {
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.btn-upload:active {
-    transform: translateY(0);
-}
-
-/* 빈 상태 전용 큰 버튼 */
 .btn-upload--large {
     margin-top: 8px;
     padding: 12px 24px;
     font-size: 15px;
-    background: linear-gradient(135deg, var(--ocean-blue), var(--sky-blue));
-    color: var(--white);
+    background: linear-gradient(135deg, var(--ocean-blue, #0077b6), var(--sky-blue, #00b4d8));
+    color: var(--white, #ffffff);
     box-shadow: 0 4px 14px rgba(91,180,196,0.4);
 }
 
-.btn-upload--large:hover {
-    opacity: 0.9;
-}
-
-/* ── 빈 상태 ────────────────────────────────────────────── */
-.empty-state {
+/* 💡 컨트롤 (탭 & 정렬) 영역 스타일 추가 */
+.controls-container {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 8px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
     gap: 12px;
+    flex-wrap: wrap; /* 화면이 좁아지면 아래로 떨어지도록 */
 }
 
-.empty-icon {
-    font-size: 56px;
-}
-
-.empty-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-dark);
-}
-
-.empty-sub {
-    font-size: 14px;
-    color: var(--text-gray);
-}
-
-/* ── 목록 ───────────────────────────────────────────────── */
-.chat-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 0;
-    margin: 0;
-}
-
-/* ── 카드 ───────────────────────────────────────────────── */
-.chat-card {
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-    background: var(--white);
-    border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
-    border: 1px solid var(--sand);
-    cursor: pointer;
-    transition: transform 0.18s, box-shadow 0.18s;
-}
-
-.chat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(91, 180, 196, 0.2);
-    border-color: var(--sky-blue);
-}
-
-.chat-card:active {
-    transform: translateY(-1px);
-}
-
-/* 💡 탭 메뉴용 스타일 (기존 스타일에 추가해 주세요) */
 .tabs-container {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
 }
 
 .tab-btn {
-    padding: 8px 16px;
+    padding: 8px 12px;
     border: none;
     background: transparent;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: #888;
     cursor: pointer;
@@ -378,11 +313,80 @@ onMounted(async () => {
 }
 
 .tab-btn.active {
-    background-color: #007bff; /* 메인 테마 색상으로 변경하세요 */
+    background-color: var(--ocean-blue, #0077b6);
     color: white;
 }
 
-/* ── 뱃지 ───────────────────────────────────────────────── */
+/* 💡 정렬 Select 디자인 */
+.sort-container {
+    display: flex;
+    gap: 8px;
+}
+
+.sort-select {
+    padding: 6px 28px 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #444;
+    cursor: pointer;
+    outline: none;
+    appearance: none; /* 브라우저 기본 화살표 숨김 */
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px top 50%;
+    background-size: 10px auto;
+    transition: border-color 0.2s;
+}
+
+.sort-select:hover, .sort-select:focus {
+    border-color: var(--ocean-blue, #0077b6);
+}
+
+/* ── 빈 상태 & 카드 (기존 유지) ───────────────────────────── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 12px;
+}
+
+.empty-icon { font-size: 56px; }
+.empty-title { font-size: 18px; font-weight: 700; color: var(--text-dark, #333333); }
+.empty-sub { font-size: 14px; color: var(--text-gray, #888888); }
+
+.chat-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0;
+    margin: 0;
+}
+
+.chat-card {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    background: var(--white, #ffffff);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+    border: 1px solid var(--sand, #f0e6d2);
+    cursor: pointer;
+    transition: transform 0.18s, box-shadow 0.18s;
+}
+
+.chat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(91, 180, 196, 0.2);
+    border-color: var(--sky-blue, #00b4d8);
+}
+
 .card-badge {
     width: 52px;
     min-width: 52px;
@@ -399,30 +403,16 @@ onMounted(async () => {
     font-size: 0.7rem;
     font-weight: bold;
     color: white;
-    background: rgba(0, 0, 0, 0.25); /* 살짝 어두운 반투명 배경으로 글씨 강조 */
+    background: rgba(0, 0, 0, 0.25);
     padding: 3px 6px;
     border-radius: 4px;
     white-space: nowrap; 
     word-break: keep-all;
 }
 
-.card-badge.emotion {
-    background-color: #ffb3ba; /* 페르소나 분석: 따뜻한 파스텔 핑크/레드 계열 */
-    color: #333;
-}
+.card-badge.emotion { background-color: #ffb3ba; color: #333; }
+.card-badge.meeting { background-color: #bae1ff; color: #333; }
 
-.card-badge.meeting {
-    background-color: #bae1ff; /* 회의 분석: 시원한 파스텔 블루 계열 */
-    color: #333;
-}
-
-.badge-number {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--white);
-}
-
-/* ── 카드 본문 ──────────────────────────────────────────── */
 .card-body {
     flex: 1;
     padding: 16px 16px 14px;
@@ -440,28 +430,26 @@ onMounted(async () => {
 .chat-title {
     font-size: 16px;
     font-weight: 700;
-    color: var(--text-dark);
+    color: var(--text-dark, #333333);
     letter-spacing: -0.3px;
 }
 
 .arrow-icon {
     font-size: 24px;
-    color: var(--ocean-blue);
+    color: var(--ocean-blue, #0077b6);
     font-weight: 700;
     line-height: 1;
 }
 
 .chat-description {
     font-size: 13px;
-    color: var(--text-gray);
+    color: var(--text-gray, #888888);
     line-height: 1.5;
-    /* 한 줄 말줄임 */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* ── 날짜 ───────────────────────────────────────────────── */
 .card-dates {
     display: flex;
     align-items: center;
@@ -474,35 +462,17 @@ onMounted(async () => {
     align-items: center;
     gap: 4px;
     font-size: 11px;
-    color: var(--text-gray);
-}
-
-.date-icon {
-    font-size: 11px;
+    color: var(--text-gray, #888888);
 }
 
 .date-divider {
-    color: var(--sand-dark);
+    color: var(--sand-dark, #d8ccb8);
     font-size: 12px;
 }
 
-/* ── 반응형 ─────────────────────────────────────────────── */
 @media (max-width: 480px) {
-    .content-wrapper {
-        padding: 16px 12px 48px;
-    }
-
-    .chat-title {
-        font-size: 15px;
-    }
-
-    .card-badge {
-        width: 44px;
-        min-width: 44px;
-    }
-
-    .badge-number {
-        font-size: 17px;
-    }
+    .content-wrapper { padding: 16px 12px 48px; }
+    .controls-container { flex-direction: column; align-items: flex-start; }
+    .sort-container { width: 100%; justify-content: flex-end; }
 }
 </style>
