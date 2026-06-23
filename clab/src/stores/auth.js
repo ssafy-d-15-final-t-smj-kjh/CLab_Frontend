@@ -35,6 +35,8 @@ export const useAuthStore = defineStore("auth", () => {
             accessToken.value = tokens.accessToken
 
             await fetchUserInfo()
+
+            return true
         } catch (error) {
             console.log('auth.js - login :', error)
         }
