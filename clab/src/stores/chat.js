@@ -22,7 +22,7 @@ export const useChatStore = defineStore("chat", () => {
             const apiResponse = response.data
             chatInfo.value = apiResponse.data
         } catch (error) {
-            console.error('chat.js - etchChatInfo :', error)
+            console.error('chat.js - fetchChatInfo :', error)
         }
     }
 

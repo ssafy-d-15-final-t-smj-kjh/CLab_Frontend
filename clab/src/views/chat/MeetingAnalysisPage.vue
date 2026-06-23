@@ -132,7 +132,7 @@
 
             <div class="chart-list">
                 <transition-group name="list" tag="div">
-                    <div v-for="(participant, index) in sortedParticipants" :key="participant.id" class="chart-row">
+                    <div v-for="(participant, index) in sortedParticipants" :key="participant.id" class="chart-row tooltip-container">
                         
                         <div class="rank-number" :class="`rank-${index + 1}`">{{ index + 1 }}</div>
 
@@ -157,6 +157,22 @@
                         <div class="value-display">
                             {{ participant[activeTab] }}
                             <span class="value-unit">{{ getUnit(activeTab) }}</span>
+                        </div>
+
+                        <div v-if="participant.keyOpinion || participant.assignedTask" class="custom-tooltip">
+                            
+                            <div v-if="participant.keyOpinion" class="tooltip-section">
+                                <div class="tooltip-header opinion-color">🎯 핵심 의견</div>
+                                <div class="tooltip-content">{{ participant.keyOpinion }}</div>
+                            </div>
+
+                            <hr v-if="participant.keyOpinion && participant.assignedTask" class="tooltip-divider" />
+
+                            <div v-if="participant.assignedTask" class="tooltip-section">
+                                <div class="tooltip-header task-color">✅ 할당된 작업</div>
+                                <div class="tooltip-content">{{ participant.assignedTask }}</div>
+                            </div>
+                            
                         </div>
                     </div>
                 </transition-group>
@@ -229,22 +245,24 @@ const toggleSort = () => { sortDesc.value = !sortDesc.value }
 
 // 분석 가능한 전체 지표 목록 (두 스토어의 데이터 병합 활용)
 const metricsTabs = [
-    { key: 'participationScore', label: '참여도', icon: '🏆', color: 'var(--ocean-blue, #2563eb)' },
-    { key: 'count', label: '대화 횟수', icon: '💬', color: '#0ea5e9' },
-    { key: 'meaningfulUtteranceCount', label: '유의미 발언', icon: '🗣️', color: '#059669' },
-    { key: 'topicInitiationCount', label: '주제 제시', icon: '🚀', color: '#e67e22' },
-    { key: 'reactionReceivedScore', label: '반응 점수', icon: '⭐', color: '#7c3aed' },
-    { key: 'averageReplyTime', label: '평균 답장', icon: '⏱️', color: '#ef4444' }
-]
+    { key: 'count', label: '발언 횟수', icon: '🗣️', color: '#4F46E5', unit: '회' },
+    { key: 'averageReplyTime', label: '평균 응답시간', icon: '⏱️', color: '#10B981', unit: '초' },
+    { key: 'chatLength', label: '발화 길이', icon: '📏', color: '#F59E0B', unit: '자' },
+    { key: 'meaningfulUtteranceCount', label: '유의미한 발화', icon: '💡', color: '#8B5CF6', unit: '회' },
+    // { key: 'keyOpinion', label: '핵심 의견', icon: '🎯', color: '#EC4899', unit: '개' },
+    { key: 'participationScore', label: '참여도 점수', icon: '⭐', color: '#F59E0B', unit: '점' },
+    { key: 'topicInitiationCount', label: '주제 발의', icon: '🚀', color: '#3B82F6', unit: '회' },
+    { key: 'reactionReceivedScore', label: '받은 리액션', icon: '👏', color: '#14B8A6', unit: '점' },
+    { key: 'assignedTask', label: '할당된 작업', icon: '✅', color: '#6366F1', unit: '개' }
+];  
 
 const activeTab = ref(metricsTabs[0].key)
 const activeTabInfo = computed(() => metricsTabs.find(tab => tab.key === activeTab.value))
 
 const getUnit = (key) => {
-    if (key === 'participationScore' || key === 'reactionReceivedScore') return '점'
-    if (key === 'averageReplyTime') return '분'
-    return '회'
-}
+    const tab = metricsTabs.find(t => t.key === key);
+    return tab ? tab.unit : '';
+};
 
 const sortedParticipants = computed(() => {
     return [...meetingParticipants.value].sort((a, b) => {
@@ -727,15 +745,20 @@ const getAvatarIndex = (id) => {
 
 .tabs-container {
     display: flex;
-    gap: 0.5rem;
-    padding-bottom: 1rem;
     overflow-x: auto;
-    white-space: nowrap;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    gap: 8px;
+    padding-bottom: 8px; /* 스크롤바 공간 확보 */
+    margin-bottom: 16px;
+    -webkit-overflow-scrolling: touch; /* 모바일 부드러운 스크롤 */
 }
+
 .tabs-container::-webkit-scrollbar {
+    height: 6px;
     display: none;
+}
+.tabs-container::-webkit-scrollbar-thumb {
+    background-color: #CBD5E1;
+    border-radius: 4px;
 }
 
 .tab-btn {
@@ -751,6 +774,8 @@ const getAvatarIndex = (id) => {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap; /* 텍스트 한 줄로 유지 */
+    flex-shrink: 0; /* 탭이 찌그러지지 않게 */
 }
 
 .tab-btn.active-tab {
@@ -837,6 +862,86 @@ const getAvatarIndex = (id) => {
     overflow: hidden;
     text-overflow: ellipsis;
     flex: 1;
+}
+
+.tooltip-container {
+    position: relative;
+    cursor: help; /* 마우스를 올렸을 때 도움말 커서로 변경 */
+}
+
+/* 💡 행 전체를 툴팁 기준점으로 설정 */
+.chart-row.tooltip-container {
+    position: relative; 
+    cursor: help;
+}
+
+/* 툴팁 기본 스타일 */
+.custom-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: 100%; /* 바/이름 위쪽으로 띄움 */
+    left: 7%;
+    transform: translateX(-50%);
+    margin-bottom: 8px; /* 요소와 툴팁 사이 간격 */
+    background-color: #1E293B; /* 어두운 배경 */
+    color: #F8FAFC;
+    padding: 12px 16px;
+    border-radius: 8px;
+    z-index: 100;
+    width: max-content;
+    max-width: 320px; /* 내용이 길면 줄바꿈 */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease-in-out;
+    pointer-events: none; /* 마우스 오버 방해 방지 */
+    text-align: left;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+/* 말풍선 꼬리 */
+.custom-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -6px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: #1E293B transparent transparent transparent;
+}
+
+/* 툴팁 내부 헤더(제목) 스타일 */
+.tooltip-header {
+    font-weight: 700;
+    margin-bottom: 4px;
+    font-size: 0.75rem;
+}
+
+/* 포인트 컬러 부여 */
+.opinion-color { color: #38BDF8; } /* 하늘색 */
+.task-color { color: #34D399; } /* 에메랄드(초록)색 */
+
+/* 내부 구분선 */
+.tooltip-divider {
+    border: none;
+    border-top: 1px solid #475569; /* 은은한 회색 선 */
+    margin: 8px 0;
+}
+
+/* 마우스 오버 시 애니메이션 효과 */
+.chart-row.tooltip-container:hover .custom-tooltip {
+    visibility: visible;
+    opacity: 1;
+    bottom: calc(100% + 5px); /* 떠오르는 듯한 효과 */
+}
+
+/* 마우스 오버 시 툴팁 표시 */
+.tooltip-container:hover .custom-tooltip {
+    visibility: visible;
+    opacity: 1;
+    bottom: 130%; /* 나타날 때 위로 살짝 올라가는 애니메이션 효과 */
 }
 
 .bar-container {

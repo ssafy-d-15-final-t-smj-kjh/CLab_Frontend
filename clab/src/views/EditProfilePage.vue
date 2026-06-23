@@ -13,7 +13,7 @@
             </header>
 
             <div class="content-wrapper">
-                <form @submit.prevent="submitProfileUpdate" class="section-card">
+                <div class="section-card">
                     
                     <div class="form-section">
                         <h2 class="section-title">
@@ -30,51 +30,67 @@
                             </div>
                             <input ref="fileInput" type="file" accept="image/*" class="file-input-hidden" @change="handleImageChange" />
                             <p class="image-hint">클릭하여 이미지를 변경하세요</p>
-                            <button v-if="previewImage" type="button" class="remove-image-btn" @click="removeImage">
-                                이미지 제거
-                            </button>
+                            
+                            <div class="image-actions" style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+                                <button 
+                                    v-if="previewImage" 
+                                    type="button" 
+                                    class="btn-submit" 
+                                    style="padding: 8px 16px; font-size: 14px;" 
+                                    @click="submitImageUpdate"
+                                    :disabled="!selectedFile"
+                                    :style="{ opacity: !selectedFile ? 0.5 : 1, cursor: !selectedFile ? 'not-allowed' : 'pointer' }"
+                                >
+                                    이미지 업로드
+                                </button>
+                                <button v-if="previewImage" type="button" class="remove-image-btn" @click="removeImage">
+                                    이미지 제거
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <hr class="divider" />
 
-                    <div class="form-section">
-                        <h2 class="section-title">
-                            <span class="section-icon">👤</span>
-                            사용자 이름
-                        </h2>
-                        <div class="form-group">
-                            <div class="input-wrapper">
-                                <span class="input-icon">🐚</span>
-                                <input id="username" v-model="form.username" type="text" class="form-input"
-                                    placeholder="사용자 이름을 입력하세요" :class="{ 'input-error': formErrors.username }" />
+                    <form @submit.prevent="submitInfoUpdate">
+                        <div class="form-section">
+                            <h2 class="section-title">
+                                <span class="section-icon">👤</span>
+                                사용자 이름
+                            </h2>
+                            <div class="form-group">
+                                <div class="input-wrapper">
+                                    <span class="input-icon">🐚</span>
+                                    <input id="username" v-model="form.username" type="text" class="form-input"
+                                        placeholder="사용자 이름을 입력하세요" :class="{ 'input-error': formErrors.username }" />
+                                </div>
+                                <p v-if="formErrors.username" class="error-text">
+                                    {{ formErrors.username }}
+                                </p>
                             </div>
-                            <p v-if="formErrors.username" class="error-text">
-                                {{ formErrors.username }}
-                            </p>
                         </div>
-                    </div>
 
-                    <div class="form-section">
-                        <h2 class="section-title">
-                            <span class="section-icon">☎️</span>
-                            전화번호
-                        </h2>
-                        <div class="form-group">
-                            <div class="input-wrapper">
-                                <span class="input-icon">📱</span>
-                                <input id="phoneNumber" v-model="form.phoneNumber" type="text" class="form-input"
-                                    placeholder="전화번호를 입력하세요 (예: 010-1234-5678)" :class="{ 'input-error': formErrors.phoneNumber }" />
+                        <div class="form-section">
+                            <h2 class="section-title">
+                                <span class="section-icon">☎️</span>
+                                전화번호
+                            </h2>
+                            <div class="form-group">
+                                <div class="input-wrapper">
+                                    <span class="input-icon">📱</span>
+                                    <input id="phoneNumber" v-model="form.phoneNumber" type="text" class="form-input"
+                                        placeholder="전화번호를 입력하세요 (예: 010-1234-5678)" :class="{ 'input-error': formErrors.phoneNumber }" />
+                                </div>
+                                <p v-if="formErrors.phoneNumber" class="error-text">
+                                    {{ formErrors.phoneNumber }}
+                                </p>
                             </div>
-                            <p v-if="formErrors.phoneNumber" class="error-text">
-                                {{ formErrors.phoneNumber }}
-                            </p>
                         </div>
-                    </div>
 
-                    <div class="card-footer">
-                        <button type="submit" class="btn-submit">💾 정보 수정하기</button>
-                    </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn-submit">💾 정보 수정하기</button>
+                        </div>
+                    </form>
 
                     <hr class="divider" />
 
@@ -89,20 +105,19 @@
                     </div>
                     <div class="card-footer">
                     </div>
-                </form> 
                 <ChangePassword v-if="showChangePassword" @close="showChangePassword = false" />
             </div>
         </div>
     </div>
+</div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { memberApi } from '@/api/restApi'
-import api from '@/api/axios'
 
 import LoadingInfo from '@/components/LoadingInfo.vue'
 import RetryInfo from '@/components/RetryInfo.vue'
@@ -122,8 +137,7 @@ const showChangePassword = ref(false)
 // ════════════════════════════════════════════════════════════
 const form = reactive({
     username: '',
-    phoneNumber: '', // 전화번호 필드 추가
-    image: null,
+    phoneNumber: '',
 })
 
 const formErrors = reactive({
@@ -131,40 +145,6 @@ const formErrors = reactive({
     phoneNumber: '',
 })
 
-// ════════════════════════════════════════════════════════════
-// 이미지 처리
-// ════════════════════════════════════════════════════════════
-const fileInput = ref(null)
-const previewImage = ref(null)
-
-const triggerFileInput = () => fileInput.value.click()
-
-const handleImageChange = (event) => {
-    const file = event.target.files[0]
-    if (!file) return
-
-    if (file.size > 5 * 1024 * 1024) {
-        alert('이미지 크기는 5MB 이하여야 합니다.')
-        return
-    }
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-        previewImage.value = e.target.result
-        form.image = e.target.result // Base64 데이터를 form.image에 저장
-    }
-    reader.readAsDataURL(file)
-}
-
-const removeImage = () => {
-    previewImage.value = null
-    form.image = null
-    if (fileInput.value) fileInput.value.value = ''
-}
-
-// ════════════════════════════════════════════════════════════
-// 유효성 검사 및 제출
-// ════════════════════════════════════════════════════════════
 const validateForm = () => {
     // 에러 초기화
     Object.keys(formErrors).forEach(key => formErrors[key] = '')
@@ -180,32 +160,95 @@ const validateForm = () => {
     return isValid
 }
 
-const submitProfileUpdate = async () => {
+const submitInfoUpdate = async () => {
     if (!validateForm()) return
 
     isLoading.value = true
+
     try {
-        // 백엔드로 보낼 Payload 구성 (안 바뀐 값은 기존 userInfo 값 그대로, 바뀐 값은 form 값)
-        const data = {
-            email: userInfo.value.email, // email은 수정 불가하다고 가정하고 기존 값 유지
-            username: form.username.trim(),
-            phoneNumber: form.phoneNumber.trim(),
-            image: form.image, // 변경되었으면 base64, 안 변경되었으면 기존 url
-        }
+        const formData = new FormData();
+        const dto = {
+            username: form.username,
+            phoneNumber: form.phoneNumber,
+        };
+        formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
 
-        await memberApi.updateMember(data)
-
+        await memberApi.updateMember(formData)
         await authStore.fetchUserInfo()
 
         alert('회원 정보가 성공적으로 수정되었습니다.')
         router.push('/my-info')
     } catch (error) {
+        console.log('EditProfilePage.vue - submitInfoUpdate :', error)
         const msg = error.response?.data?.message || '정보 수정 중 오류가 발생했습니다.'
         alert(msg)
     } finally {
         isLoading.value = false
     }
+};
+
+// ════════════════════════════════════════════════════════════
+// 이미지 처리
+// ════════════════════════════════════════════════════════════
+const fileInput = ref(null)
+const previewImage = ref(null)
+const selectedFile = ref(null)
+
+const triggerFileInput = () => fileInput.value.click()
+
+const handleImageChange = (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    if (file.size > 5 * 1024 * 1024) {
+        alert('이미지 크기는 5MB 이하여야 합니다.')
+        return
+    }
+
+    selectedFile.value = file
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+        previewImage.value = e.target.result
+        form.image = e.target.result // Base64 데이터를 form.image에 저장
+    }
+    reader.readAsDataURL(file)
 }
+
+const removeImage = () => {
+    previewImage.value = null
+    form.image = null
+    selectedFile.value = null
+    if (fileInput.value) fileInput.value.value = ''
+}
+
+const submitImageUpdate = async () => {
+    if (!selectedFile.value) {
+        alert('변경할 이미지를 선택해주세요.');
+        return;
+    }
+
+    isLoading.value = true;
+    try {
+        const formData = new FormData();
+
+        formData.append('image', selectedFile.value);
+
+        await memberApi.updateMember(formData); 
+        await authStore.fetchUserInfo();
+
+        alert('프로필 이미지가 성공적으로 수정되었습니다.');
+        selectedFile.value = null;
+    } catch (error) {
+        console.log('EditProfilePage.vue - submitImageUpdate :', error);
+        const msg = error.response?.data?.message || '이미지 수정 중 오류가 발생했습니다.';
+        alert(msg);
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+
 
 // ════════════════════════════════════════════════════════════
 // 데이터 초기화

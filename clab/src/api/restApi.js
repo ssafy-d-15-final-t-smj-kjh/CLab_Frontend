@@ -9,7 +9,7 @@ export const authApi = {
 export const memberApi = {
     getMe: () => api.get('/member/me'),
     createMember: (data) => api.post("/member/join", data),
-    updateMember: (data) => api.patch(`/member/me`, data),
+    updateMember: (formData) => api.patch(`/member/me`, formData),
 }
 
 export const chatApi = {
