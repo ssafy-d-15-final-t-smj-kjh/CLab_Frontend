@@ -53,26 +53,33 @@ api.interceptors.response.use(
 
         if (status === 401) {
             if (errorCode === 'ERR-AUTH-002') {
-                try {
-                    const newAccessToken = await authStore.refreshToken()
-
-                    config.headers.Authorization = `Bearer ${newAccessToken}`;
-                    return api(config);
-                } catch (refreshError) {
-                    console.log(refreshError)
-                    authStore.logout()
-                    alert('세션이 만료되었습니다. 다시 로그인해 주세요.')
-                    router.push('/login')
-                    return Promise.reject(refreshError);
-                }
+                authStore.logout()
+                alert('세션이 만료되었습니다. 다시 로그인해 주세요.')
+                router.push('/login')
+                return Promise.reject(error)
             } else if (errorCode === 'ERR-AUTH-001') {
                 alert(errorMessage);
                 return Promise.reject(error);
             } else {
-                authStore.logout();
-                alert(errorMessage);
-                router.push('/login'); // 인증이 필요하므로 로그인 페이지로 강제 이동
-                return Promise.reject(error);
+                if (!config._retry) {
+                    config._retry = true;
+
+                    try {
+                        const newAccessToken = await authStore.refreshToken();
+                        config.headers.Authorization = `Bearer ${newAccessToken}`;
+                        return api(config); // 성공하면 원래 하려던 요청 다시 보내기
+                    } catch (refreshError) {
+                        console.log('토큰 재발급 실패:', refreshError);
+                        authStore.logout();
+                        alert('세션이 만료되었습니다. 다시 로그인해 주세요.');
+                        router.push('/login');
+                        return Promise.reject(refreshError);
+                    }
+                } else {
+                    authStore.logout();
+                    router.push('/login');
+                    return Promise.reject(error);
+                }
             }
         } else if (status === 403) {
             alert(errorMessage); // "접근 권한이 없습니다."

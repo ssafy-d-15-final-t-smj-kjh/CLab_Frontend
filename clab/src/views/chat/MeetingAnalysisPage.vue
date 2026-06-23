@@ -252,8 +252,7 @@ const metricsTabs = [
     // { key: 'keyOpinion', label: '핵심 의견', icon: '🎯', color: '#EC4899', unit: '개' },
     { key: 'participationScore', label: '참여도 점수', icon: '⭐', color: '#F59E0B', unit: '점' },
     { key: 'topicInitiationCount', label: '주제 발의', icon: '🚀', color: '#3B82F6', unit: '회' },
-    { key: 'reactionReceivedScore', label: '받은 리액션', icon: '👏', color: '#14B8A6', unit: '점' },
-    { key: 'assignedTask', label: '할당된 작업', icon: '✅', color: '#6366F1', unit: '개' }
+    { key: 'reactionReceivedScore', label: '받은 리액션', icon: '👏', color: '#14B8A6', unit: '점' }
 ];  
 
 const activeTab = ref(metricsTabs[0].key)
