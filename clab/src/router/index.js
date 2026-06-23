@@ -20,56 +20,56 @@ import ServerErrorPage from "@/views/error/ServerErrorPage.vue";
 import NetworkErrorPage from "@/views/error/NetworkErrorPage.vue";
 
 const routes = [
-{
-  path: '/',
-  redirect: '/main'
-},
-{
-  path: '/find-email',
-  name: 'FindEmail',
-  component: FindEmailPage,
-},
-{
-  path: '/find-pwd',
-  name: 'FindPassword',
-  component: FindPasswordPage,
-},
-{
-  path: '/register',
-  name: 'Register',
-  component: RegisterPage,
-},
-{
-  path: '/main',
-  name: 'Main',
-  component: MainPage,
-},
-{
-  path: '/login',
-  name: 'Login',
-  component: LoginPage,
-},
-{
-  path: '/my-info',
-  name: 'MyInfo',
-  component: MyInfoPage,
-},
-{
-  path: '/edit-profile',
-  name: 'EditProfile',
-  component: EditProfilePage,
-},
-{
-  path: '/chat',
-  name: 'ChatList',
-  component: ChatListPage,
-},
-{
-  path: '/chat/:chatId',
-  name: 'ChatDetail',
-  component: ChatDetailPage,
-},
-{
+  {
+    path: '/',
+    redirect: '/main'
+  },
+  {
+    path: '/find-email',
+    name: 'FindEmail',
+    component: FindEmailPage,
+  },
+  {
+    path: '/find-pwd',
+    name: 'FindPassword',
+    component: FindPasswordPage,
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: RegisterPage,
+  },
+  {
+    path: '/main',
+    name: 'Main',
+    component: MainPage,
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: LoginPage,
+  },
+  {
+    path: '/my-info',
+    name: 'MyInfo',
+    component: MyInfoPage,
+  },
+  {
+    path: '/edit-profile',
+    name: 'EditProfile',
+    component: EditProfilePage,
+  },
+  {
+    path: '/chat',
+    name: 'ChatList',
+    component: ChatListPage,
+  },
+  {
+    path: '/chat/:chatId',
+    name: 'ChatDetail',
+    component: ChatDetailPage,
+  },
+  {
     path: "/upload-chat",
     name: "UploadChat",
     component: UploadChatPage
@@ -123,7 +123,7 @@ const routes = [
     path: '/:pathMatch(.*)*',
     component: NotFoundPage,
   },
-  
+
 
 
 ]

@@ -51,36 +51,50 @@
                 </div>
             </div>
 
-            <!-- ── 페르소나 분석 ── -->
             <div class="section card" v-if="persona">
+                <h2 class="section-title">🥸 페르소나</h2>
+                <div class="persona-grid">
+                    <div class="persona-box analysis">
+                        <h3>🔖 페르소나 이름</h3>
+                        <p>{{ persona.name }}</p>
+                    </div>
+                    <div class="persona-box speech">
+                        <h3>📗 페르소나 설명</h3>
+                        <p>{{ persona.description }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── 페르소나 분석 ── -->
+            <div class="section card" v-if="personaAnalysis">
                 <h2 class="section-title">🧬 페르소나 분석</h2>
 
                 <div class="persona-grid">
                     <div class="persona-box analysis">
                         <h3>📋 분석 요약</h3>
-                        <p>{{ analysis.analysisSummary }}</p>
+                        <p>{{ personaAnalysis.analysisSummary }}</p>
                     </div>
                     <div class="persona-box speech">
                         <h3>🗣️ 말투 특징</h3>
-                        <p>{{ analysis.speechStyle }}</p>
+                        <p>{{ personaAnalysis.speechStyle }}</p>
                     </div>
                 </div>
 
                 <!-- 테토 게이지 -->
                 <div class="teto-gauge-section">
                     <div class="teto-gauge-labels">
-                        <span class="gauge-label-left">🌸 에테르형</span>
-                        <span class="gauge-score">{{ analysis.tetoScore }}점</span>
+                        <span class="gauge-label-left">🌸 에겐형</span>
+                        <span class="gauge-score">{{ personaAnalysis.tetoScore }}점</span>
                         <span class="gauge-label-right">⚡ 테토형</span>
                     </div>
                     <div class="teto-gauge-bar">
                         <div class="teto-gauge-fill" :style="{
-                            width: analysis.tetoScore + '%',
-                            background: tetoGradient(analysis.tetoScore)
+                            width: personaAnalysis.tetoScore + '%',
+                            background: tetoGradient(personaAnalysis.tetoScore)
                         }"></div>
-                        <div class="gauge-marker" :style="{ left: analysis.tetoScore + '%' }"></div>
+                        <div class="gauge-marker" :style="{ left: personaAnalysis.tetoScore + '%' }"></div>
                     </div>
-                    <p class="teto-desc">{{ tetoDescription(analysis.tetoScore) }}</p>
+                    <p class="teto-desc">{{ tetoDescription(personaAnalysis.tetoScore) }}</p>
                 </div>
             </div>
 
@@ -330,20 +344,19 @@ function loadMore() {
 }
 
 // ── API 호출 ──────────────────────────────────────────
-async function fetchData() {
+const fetchData = async () => {
+    isLoading.value = true
+    error.value = null
     try {
-        isLoading.value = true
-
         await fetchCategories()
         await fetchParticipantInfo()
         await fetchContents()
         await fetchContentCategories()
         await fetchParticipantCategories()
-        await fetchAnalysis()
+        await fetchPersonaAnalysis()
         await fetchPersona()
-
     } catch (e) {
-        console.error(e)
+        console.error('PersonaAnalysisParticipantDetailPage.vue - fetchData :', e)
     } finally {
         isLoading.value = false
     }
@@ -358,7 +371,7 @@ const fetchPersona = async () => {
 const fetchContents = async () => {
     await contentStore.fetchContents(participantId)
 }
-const fetchAnalysis = async () => {
+const fetchPersonaAnalysis = async () => {
     await personaAnalysisStore.fetchPersonaAnalysis(participantId)
 }
 const fetchContentCategories = async () => {

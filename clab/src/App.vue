@@ -42,7 +42,9 @@ const fetchData = async () => {
 }
 
 onMounted(
-  fetchData
+  () => {
+    fetchData()
+  }
 )
 </script>
 

@@ -20,21 +20,24 @@ export const useAuthStore = defineStore("auth", () => {
     })
 
     const login = async (dto) => {
-        const response = await authApi.login(dto)
-        const apiResponse = response.data
-        const tokens = apiResponse.data
+        try {
+            const response = await authApi.login(dto)
+            const apiResponse = response.data
+            const tokens = apiResponse.data
 
-        if (!tokens || !tokens.accessToken) {
-            console.log('토큰이 없습니다.')
-            return
+            if (!tokens || !tokens.accessToken) {
+                console.log('토큰이 없습니다.')
+                return
+            }
+
+            localStorage.setItem("accessToken", tokens.accessToken);
+
+            accessToken.value = tokens.accessToken
+
+            await fetchUserInfo()
+        } catch (error) {
+            console.log('auth.js - login :', error)
         }
-
-        localStorage.setItem("accessToken", tokens.accessToken);
-
-        accessToken.value = tokens.accessToken
-
-        await fetchUserInfo()
-        console.log(userInfo.value)
     };
 
     const logout = async () => {
@@ -51,7 +54,6 @@ export const useAuthStore = defineStore("auth", () => {
             const response = await memberApi.getMe()
             const apiResponse = response.data;
             userInfo.value = apiResponse.data;
-            console.log('userInfo', userInfo.value)
         } catch (error) {
             console.error('auth.js - fetchUserInfo :', error)
         }
@@ -63,19 +65,13 @@ export const useAuthStore = defineStore("auth", () => {
             const apiResponse = response?.data
             const newAccessToken = apiResponse?.data
 
-            if (!newAccessToken) {
-                throw new Error('새로운 access 토큰이 없습니다.')
-            }
-
-            console.log('accessToken 발급 완료 :', newAccessToken)
+            if (!newAccessToken) return
 
             localStorage.setItem('accessToken', newAccessToken)
-            accessToken.value = newAccessToken;
-
+            accessToken.value = newAccessToken
             return newAccessToken
         } catch (error) {
-            console.log('토큰 재발급 실패 : ', error)
-            throw error
+            console.log('auth.js - refreshToken :', error)
         }
     }
 

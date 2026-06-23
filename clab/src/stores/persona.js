@@ -12,7 +12,7 @@ export const usePersonaStore = defineStore("persona", () => {
             const apiResponse = response.data
             personas.value = apiResponse.data
         } catch (error) {
-            console.error('인물상 정보 조회 실패:', error)
+            console.error('persona.js - fetchPersonas :', error)
         }
     }
 
@@ -22,12 +22,14 @@ export const usePersonaStore = defineStore("persona", () => {
             const apiResponse = response.data
             persona.value = apiResponse.data
         } catch (error) {
-            console.error('인물상 정보 조회 실패:', error)
+            console.error('persona.js - fetchPersona :', error)
         }
     }
 
     const clearPersonaInfo = () => { persona.value = null }
 
-    return { personas, persona, 
-        fetchPersonas, fetchPersona, clearPersonaInfo }
+    return {
+        personas, persona,
+        fetchPersonas, fetchPersona, clearPersonaInfo
+    }
 });

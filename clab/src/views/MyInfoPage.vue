@@ -26,14 +26,19 @@
 
                     <div class="info-list">
                         <div class="info-item">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{{ userInfo?.email }}</span>
+                            <span class="bar bar-blue"></span>
+                        </div>
+                        <div class="info-item">
                             <span class="info-label">Nickname</span>
                             <span class="info-value">{{ userInfo?.username }}</span>
                             <span class="bar bar-yellow"></span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Email</span>
-                            <span class="info-value">{{ userInfo?.email }}</span>
-                            <span class="bar bar-blue"></span>
+                            <span class="info-label">전화번호</span>
+                            <span class="info-value">{{ userInfo?.phoneNumber }}</span>
+                            <span class="bar bar-red"></span>
                         </div>
                     </div>
 

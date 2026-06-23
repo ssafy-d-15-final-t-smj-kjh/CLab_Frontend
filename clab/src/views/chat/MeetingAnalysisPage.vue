@@ -115,7 +115,7 @@
                 <div class="header-left">
                     <span class="section-icon">📊</span>
                     <h3 class="section-title">참여자 지표 비교</h3>
-                    <span class="count-badge">{{ mergedParticipants.length }}명</span>
+                    <span class="count-badge">{{ meetingParticipants.length }}명</span>
                 </div>
                 <button class="sort-btn" @click="toggleSort">
                     {{ sortDesc ? '⬇️ 내림차순' : '⬆️ 오름차순' }}
@@ -194,7 +194,7 @@ const isLoading = ref(true)
 const error = ref(null)
 
 const chatId = route.params.chatId
-const { participants } = storeToRefs(participantStore)
+const { participants, meetingParticipants } = storeToRefs(participantStore)
 const { meetingAnalysis } = storeToRefs(meetingAnalysisStore)
 const { meetingParticipations } = storeToRefs(meetingParticipationStore)
 
@@ -205,13 +205,10 @@ const fetchData = async () => {
     isLoading.value = true
     error.value = null
     try {
-        await participantStore.fetchParticipants(chatId)
         await meetingAnalysisStore.fetchMeetingAnalysis(chatId)
-        if (meetingAnalysis.value && meetingAnalysis.value.id) {
-            await meetingParticipationStore.fetchMeetingParticipations(meetingAnalysis.value.id)
-        }
-    } catch (e) {
-        console.error(e)
+        await participantStore.fetchMeetingParticipants(chatId)
+    } catch (error) {
+        console.error('MeetingAnalysisPage.vue - fetchData', error)
         error.value = '회의 분석 정보를 불러오는 데 실패하였습니다.'
     } finally {
         isLoading.value = false
@@ -244,29 +241,29 @@ const getUnit = (key) => {
     return '회'
 }
 
-// ── 데이터 병합 및 정렬 연산 ──────────────────────────────────
-const mergedParticipants = computed(() => {
-    if (!participants.value) return []
+// // ── 데이터 병합 및 정렬 연산 ──────────────────────────────────
+// const mergedParticipants = computed(() => {
+//     if (!meetingParticipants.value) return []
     
-    // participants를 기준으로 meetingParticipations 데이터를 Join
-    return participants.value.map(p => {
-        const mp = meetingParticipations.value?.find(m => m.participantId === p.id) || {}
-        return {
-            id: p.id,
-            name: p.name || '알 수 없음',
-            count: p.count || 0,
-            averageReplyTime: p.averageReplyTime || 0,
-            chatLength: p.chatLength || 0,
-            participationScore: mp.participationScore || 0,
-            meaningfulUtteranceCount: mp.meaningfulUtteranceCount || 0,
-            topicInitiationCount: mp.topicInitiationCount || 0,
-            reactionReceivedScore: mp.reactionReceivedScore || 0
-        }
-    })
-})
+//     // participants를 기준으로 meetingParticipations 데이터를 Join
+//     return meetingParticipants.value.map(p => {
+//         const mp = meetingParticipations.value?.find(m => m.participantId === p.id) || {}
+//         return {
+//             id: p.id,
+//             name: p.name || '알 수 없음',
+//             count: p.count || 0,
+//             averageReplyTime: p.averageReplyTime || 0,
+//             chatLength: p.chatLength || 0,
+//             participationScore: mp.participationScore || 0,
+//             meaningfulUtteranceCount: mp.meaningfulUtteranceCount || 0,
+//             topicInitiationCount: mp.topicInitiationCount || 0,
+//             reactionReceivedScore: mp.reactionReceivedScore || 0
+//         }
+//     })
+// })
 
 const sortedParticipants = computed(() => {
-    return [...mergedParticipants.value].sort((a, b) => {
+    return [...meetingParticipants.value].sort((a, b) => {
         const valA = a[activeTab.value] || 0
         const valB = b[activeTab.value] || 0
         
@@ -276,8 +273,8 @@ const sortedParticipants = computed(() => {
 })
 
 const maxValue = computed(() => {
-    if (sortedParticipants.value.length === 0) return 1
-    const max = Math.max(...sortedParticipants.value.map(p => p[activeTab.value] || 0))
+    if (meetingParticipants.value.length === 0) return 1
+    const max = Math.max(...meetingParticipants.value.map(p => p[activeTab.value] || 0))
     return max > 0 ? max : 1
 })
 
@@ -316,7 +313,14 @@ const duration = computed(() => {
     const diff = new Date(meetingAnalysis.value.endedAt) - new Date(meetingAnalysis.value.startedAt)
     const mins = Math.floor(diff / 60000)
     const hours = Math.floor(mins / 60)
-    return hours > 0 ? `${hours}시간 ${mins % 60}분` : `${mins}분`
+    const days = Math.floor(hours / 24)
+    if (days > 0) {
+        return `${days}일 ${hours % 24}시간 ${mins % 60}분`
+    } else if (hours > 0) {
+        return `${hours}시간 ${mins % 60}분` 
+    } else {
+        return `${mins}분`
+    }
 })
 
 const atmosphereClass = computed(() => {

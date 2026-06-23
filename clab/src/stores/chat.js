@@ -12,7 +12,7 @@ export const useChatStore = defineStore("chat", () => {
             const apiResponse = response.data
             chats.value = apiResponse.data
         } catch (error) {
-            console.error('대화 정보 조회 실패:', error)
+            console.error('chat.js - fetchChats :', error)
         }
     }
 
@@ -22,7 +22,7 @@ export const useChatStore = defineStore("chat", () => {
             const apiResponse = response.data
             chatInfo.value = apiResponse.data
         } catch (error) {
-            console.error('대화 정보 조회 실패:', error)
+            console.error('chat.js - etchChatInfo :', error)
         }
     }
 

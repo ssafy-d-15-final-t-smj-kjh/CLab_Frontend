@@ -26,10 +26,25 @@
                 </button>
             </div>
 
+            <div class="tabs-container">
+                <button 
+                    v-for="tab in tabs" 
+                    :key="tab.value"
+                    class="tab-btn"
+                    :class="{ 'active': activeTab === tab.value }"
+                    @click="activeTab = tab.value"
+                >
+                    {{ tab.label }}
+                </button>
+            </div>
+
+
             <!-- 목록 없을 때 -->
-            <div v-if="chats.length === 0" class="empty-state">
+            <div v-if="filteredChats.length === 0" class="empty-state">
                 <span class="empty-icon">🌊</span>
-                <p class="empty-title">아직 대화가 없어요</p>
+                <p class="empty-title">
+                    {{ activeTab === 'ALL' ? '아직 대화가 없어요' : '해당 카테고리의 대화가 없어요' }}
+                </p>
                 <p class="empty-sub">새로운 대화를 시작해보세요!</p>
                 <button class="btn-upload btn-upload--large" @click="router.push('/upload-chat')">
                     <span>📂</span>
@@ -37,15 +52,13 @@
                 </button>
             </div>
 
-            <!-- 대화 목록 -->
             <ul v-else class="chat-list">
-                <li v-for="chat in chats" :key="chat.id" class="chat-card" @click="goToDetail(chat.id)">
-                    <!-- 카드 왼쪽 인덱스 뱃지 -->
-                    <div class="card-badge">
-                        <span class="badge-number">{{ chat.id }}</span>
+                <li v-for="chat in filteredChats" :key="chat.id" class="chat-card" @click="goToDetail(chat.id)">
+                    <div class="card-badge" :class="chat.category.toLowerCase()">
+                        <!-- <span class="badge-number">{{ chat.id }}</span> -->
+                        <span class="badge-category">{{ chat.category === 'EMOTION' ? '페르소나' : '회의' }}</span>
                     </div>
 
-                    <!-- 카드 본문 -->
                     <div class="card-body">
                         <div class="card-top">
                             <h2 class="chat-title">{{ chat.title }}</h2>
@@ -72,7 +85,7 @@
 
 <script setup>
 import { storeToRefs } from 'pinia'
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useChatStore } from '@/stores/chat'
 
@@ -99,6 +112,25 @@ const formatTime = (dateStr) => {
         hour12: true
     })
 }
+
+// 💡 탭 필터링 로직 추가
+// ════════════════════════════════════════════════════════════
+const activeTab = ref('ALL') // 초기 탭 설정: 'ALL', 'EMOTION', 'MEETING'
+
+// 탭 목록 정의
+const tabs = [
+    { label: '전체', value: 'ALL' },
+    { label: '페르소나 분석', value: 'EMOTION' },
+    { label: '회의 분석', value: 'MEETING' }
+]
+
+// 활성화된 탭에 따라 목록을 걸러주는 Computed 속성
+const filteredChats = computed(() => {
+    if (activeTab.value === 'ALL') {
+        return chats.value
+    }
+    return chats.value.filter(chat => chat.category === activeTab.value)
+})
 
 // ── 상세 이동 ───────────────────────────────────────────────
 const goToDetail = (chatId) => {
@@ -319,14 +351,69 @@ onMounted(async () => {
     transform: translateY(-1px);
 }
 
+/* 💡 탭 메뉴용 스타일 (기존 스타일에 추가해 주세요) */
+.tabs-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.tab-btn {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+}
+
+.tab-btn:hover {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.tab-btn.active {
+    background-color: #007bff; /* 메인 테마 색상으로 변경하세요 */
+    color: white;
+}
+
 /* ── 뱃지 ───────────────────────────────────────────────── */
 .card-badge {
     width: 52px;
     min-width: 52px;
-    background: linear-gradient(180deg, var(--ocean-blue), var(--sky-blue));
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 4px;
+    min-width: 65px; 
+    flex-shrink: 0
+}
+
+.badge-category {
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: white;
+    background: rgba(0, 0, 0, 0.25); /* 살짝 어두운 반투명 배경으로 글씨 강조 */
+    padding: 3px 6px;
+    border-radius: 4px;
+    white-space: nowrap; 
+    word-break: keep-all;
+}
+
+.card-badge.emotion {
+    background-color: #ffb3ba; /* 페르소나 분석: 따뜻한 파스텔 핑크/레드 계열 */
+    color: #333;
+}
+
+.card-badge.meeting {
+    background-color: #bae1ff; /* 회의 분석: 시원한 파스텔 블루 계열 */
+    color: #333;
 }
 
 .badge-number {
