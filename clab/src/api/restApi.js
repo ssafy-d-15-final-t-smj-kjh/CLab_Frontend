@@ -9,7 +9,9 @@ export const authApi = {
 export const memberApi = {
     getMe: () => api.get('/member/me'),
     createMember: (data) => api.post("/member/join", data),
-    updateMember: (formData) => api.patch(`/member/me`, formData),
+    updateMemberImage: (imageFile) => api.patch(`/member/me/image`, imageFile),
+    updateMemberPassword: (dto) => api.patch(`/member/me/password`, dto),
+    updateMemberInfo: (dto) => api.patch(`/member/me`, dto),
 }
 
 export const chatApi = {
