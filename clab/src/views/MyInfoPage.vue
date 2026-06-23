@@ -25,20 +25,44 @@
                     </div>
 
                     <div class="info-list">
-                        <div class="info-item">
-                            <span class="info-label">Email</span>
-                            <span class="info-value">{{ userInfo?.email }}</span>
-                            <span class="bar bar-blue"></span>
+                        <div class="info-item border-blue">
+                            <div class="item-icon">📧</div>
+                            <div class="item-details">
+                                <span class="info-label">Email</span>
+                                <span class="info-value">{{ userInfo?.email || '-' }}</span>
+                            </div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">Nickname</span>
-                            <span class="info-value">{{ userInfo?.username }}</span>
-                            <span class="bar bar-yellow"></span>
+                        
+                        <div class="info-item border-yellow">
+                            <div class="item-icon">👤</div>
+                            <div class="item-details">
+                                <span class="info-label">Nickname</span>
+                                <span class="info-value">{{ userInfo?.username || '-' }}</span>
+                            </div>
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">전화번호</span>
-                            <span class="info-value">{{ userInfo?.phoneNumber }}</span>
-                            <span class="bar bar-red"></span>
+                        
+                        <div class="info-item border-red">
+                            <div class="item-icon">📱</div>
+                            <div class="item-details">
+                                <span class="info-label">전화번호</span>
+                                <span class="info-value">{{ userInfo?.phoneNumber || '-' }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item border-red">
+                            <div class="item-icon">🌱</div>
+                            <div class="item-details">
+                                <span class="info-label">가입일자</span>
+                                <span class="info-value">{{ formatDateTime(userInfo?.createdAt) }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item border-red">
+                            <div class="item-icon">📝</div>
+                            <div class="item-details">
+                                <span class="info-label">수정일자</span>
+                                <span class="info-value">{{ formatDateTime(userInfo?.updatedAt) }}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -67,6 +91,21 @@ const {userInfo} = storeToRefs(authStore)
 
 const isLoading = ref(false)
 const error = ref(null)
+
+const formatDateTime = (datetime) => {
+    if (!datetime) return '-'
+
+    const date = new Date(datetime)
+
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hour = String(date.getHours()).padStart(2, '0')
+    const minute = String(date.getMinutes()).padStart(2, '0')
+    const second = String(date.getSeconds()).padStart(2, '0')
+
+    return `${year}년 ${month}월 ${day}일 ${hour}시 ${minute}분 ${second}초`
+}
 
 const fetchUserInfo = async() => {
     isLoading.value = true
@@ -105,7 +144,6 @@ onMounted(async () => {
         await fetchUserInfo()
     }
 })
-
 </script>
 
 <style scoped>
@@ -125,7 +163,7 @@ onMounted(async () => {
 }
 
 .profile-card {
-    background: var(--white);
+    background: var(--white, #ffffff);
     border-radius: 22px;
     padding: 30px 34px;
     width: 380px;
@@ -141,12 +179,12 @@ onMounted(async () => {
 .card-title {
     font-size: 20px;
     font-weight: 800;
-    color: var(--text-dark);
+    color: var(--text-dark, #333333);
 }
 
 .card-subtitle {
     font-size: 12px;
-    color: var(--text-gray);
+    color: var(--text-gray, #888888);
 }
 
 .flask-icon {
@@ -164,7 +202,7 @@ onMounted(async () => {
     width: 90px;
     height: 90px;
     border-radius: 50%;
-    border: 3px solid var(--sand-dark);
+    border: 3px solid var(--sand-dark, #d8ccb8);
     overflow: visible;
 }
 
@@ -179,7 +217,7 @@ onMounted(async () => {
     position: absolute;
     bottom: -4px;
     right: -4px;
-    background: var(--ocean-blue);
+    background: var(--ocean-blue, #0077b6);
     border-radius: 50%;
     width: 28px;
     height: 28px;
@@ -189,57 +227,84 @@ onMounted(async () => {
     font-size: 14px;
 }
 
+/* 새롭게 변경된 info-list 스타일 */
 .info-list {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
 }
 
 .info-item {
-    position: relative;
-    background: #f7f7f7;
+    display: flex;
+    align-items: center;
+    background: #f8f9fa; /* 기존보다 살짝 더 밝고 부드러운 배경 */
     border-radius: 12px;
-    padding: 12px 16px;
+    padding: 14px 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03); /* 은은한 입체감 */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 4px solid transparent; /* 좌측 포인트 바를 위한 공간 확보 */
+}
+
+.info-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* 각 항목별 좌측 포인트 컬러 설정 */
+.border-blue {
+    border-left-color: var(--ocean-blue, #0077b6);
+}
+
+.border-yellow {
+    border-left-color: #e6b800;
+}
+
+.border-red {
+    border-left-color: var(--crab-red, #ff4d4d);
+}
+
+/* 항목별 아이콘 컨테이너 */
+.item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    margin-right: 14px;
+    font-size: 18px;
+}
+
+.item-details {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* 남은 공간 모두 차지 */
     overflow: hidden;
 }
 
 .info-label {
-    display: block;
     font-size: 11px;
-    color: var(--text-gray);
-    margin-bottom: 4px;
+    color: var(--text-gray, #888888);
+    margin-bottom: 3px;
+    font-weight: 600;
 }
 
 .info-value {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
-    color: var(--text-dark);
+    color: var(--text-dark, #333333);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* 글자가 길 경우 ... 처리 */
 }
 
-.bar {
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 6px;
-    height: 100%;
-}
-
-.bar-yellow {
-    background: #e6b800;
-}
-
-.bar-blue {
-    background: var(--ocean-blue);
-}
-
-.bar-red {
-    background: var(--crab-red);
-}
-
+/* 버튼 스타일링 유지 */
 .edit-btn {
     width: 100%;
-    background: var(--ocean-blue);
-    color: var(--white);
+    background: var(--ocean-blue, #0077b6);
+    color: var(--white, #ffffff);
     border: none;
     border-radius: 24px;
     padding: 14px;
@@ -247,17 +312,18 @@ onMounted(async () => {
     font-weight: 700;
     cursor: pointer;
     margin-top: 24px;
-    transition: transform 0.15s;
+    transition: transform 0.15s, background-color 0.2s;
 }
 
 .edit-btn:hover {
     transform: scale(1.02);
+    filter: brightness(1.1); /* 호버 시 살짝 밝아짐 */
 }
 
 .logout-btn {
     width: 100%;
-    background: var(--sand);
-    color: var(--text-dark);
+    background: var(--sand, #f0e6d2);
+    color: var(--text-dark, #333333);
     border: none;
     border-radius: 24px;
     padding: 14px;
@@ -265,9 +331,10 @@ onMounted(async () => {
     font-weight: 700;
     cursor: pointer;
     margin-top: 12px;
+    transition: background-color 0.2s;
 }
 
 .logout-btn:hover {
-    background: var(--sand-dark);
+    background: var(--sand-dark, #d8ccb8);
 }
 </style>
