@@ -2,11 +2,7 @@ import api from "./axios";
 
 export const authApi = {
     login: (data) => api.post("/auth/login", data),
-    refresh: () => {
-        return api.post("/auth/refresh", {}, {
-            withCredentials: true
-        });
-    },
+    refresh: () => api.post("/auth/refresh", {}, { withCredentials: true }),
     logout: () => api.post("/auth/logout"),
 }
 

@@ -13,6 +13,11 @@ import EditChatPage from "@/views/chat/EditChatPage.vue";
 import MeetingAnalysisPage from "@/views/chat/MeetingAnalysisPage.vue";
 import PersonaAnalysisParticipantDetailPage from "@/views/chat/PersonaAnalysisParticipantDetailPage.vue";
 import PersonaAnalysisPage from "@/views/chat/PersonaAnalysisPage.vue";
+import UnauthorizedPage from "@/views/error/UnauthorizedPage.vue";
+import ForbiddenPage from "@/views/error/ForbiddenPage.vue";
+import NotFoundPage from "@/views/error/NotFoundPage.vue";
+import ServerErrorPage from "@/views/error/ServerErrorPage.vue";
+import NetworkErrorPage from "@/views/error/NetworkErrorPage.vue";
 
 const routes = [
   {
@@ -89,6 +94,37 @@ const routes = [
     name: 'MeetingAnalysis',
     component: MeetingAnalysisPage
   },
+  {
+    path: '/error/401',
+    name: 'Unauthorized',
+    component: UnauthorizedPage
+  },
+  {
+    path: '/error/403',
+    name: 'Forbidden',
+    component: ForbiddenPage
+  },
+  // {
+  //   path: '/error/404',
+  //   name: 'NotFound',
+  //   component: NotFoundPage
+  // },
+  {
+    path: '/error/500',
+    name: 'ServerError',
+    component: ServerErrorPage
+  },
+  {
+    path: '/error/network',
+    name: 'NetworkError',
+    component: NetworkErrorPage
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    component: NotFoundPage,
+  },
+
+
 
 ]
 

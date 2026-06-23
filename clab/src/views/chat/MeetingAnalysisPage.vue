@@ -221,8 +221,11 @@ const fetchData = async () => {
     isLoading.value = true
     error.value = null
     try {
+        console.log('chatId', chatId)
         await meetingAnalysisStore.fetchMeetingAnalysis(chatId)
         await participantStore.fetchMeetingParticipants(chatId)
+        console.log('meetingAnalysis', meetingAnalysis)
+        console.log('meetingParticipants', meetingParticipants)
     } catch (error) {
         console.error('MeetingAnalysisPage.vue - fetchData', error)
         error.value = '회의 분석 정보를 불러오는 데 실패하였습니다.'
@@ -230,9 +233,11 @@ const fetchData = async () => {
         isLoading.value = false
     }
 }
-onMounted(async () => {
-    await fetchData()
-})
+onMounted(
+    () => {
+        fetchData()
+    }
+)
 
 // ── 탭 및 정렬 상태 관리 ──────────────────────────────────────
 const sortDesc = ref(true) // 기본: 내림차순
@@ -264,7 +269,6 @@ const sortedParticipants = computed(() => {
         const valA = a[activeTab.value] || 0
         const valB = b[activeTab.value] || 0
         
-        // sortDesc 값에 따라 내림차순 / 오름차순 반환
         return sortDesc.value ? valB - valA : valA - valB
     })
 })

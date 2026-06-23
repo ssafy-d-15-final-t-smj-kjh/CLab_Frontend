@@ -135,7 +135,7 @@ const handleSubmit = async () => {
         await chatApi.updateChat(chatId, dto)
         chatStore.fetchChatInfo(chatId);
         alert('수정이 완료되었습니다.')
-        router.push(`/chat-detail/${chatId}`)
+        router.push(`/chat/${chatId}`)
     } catch (error) {
         console.error(error)
         const msg = error.response?.data?.message || '수정 중 오류가 발생했습니다.'
