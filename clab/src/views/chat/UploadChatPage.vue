@@ -3,7 +3,7 @@
 
         <!-- 헤더 -->
         <header class="page-header">
-            <button class="back-btn" @click="router.push('/chat-list')">
+            <button class="back-btn" @click="router.push('/chat')">
                 <span>←</span>
             </button>
             <h1 class="page-title">대화 업로드하기</h1>
