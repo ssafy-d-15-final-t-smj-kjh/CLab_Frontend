@@ -49,9 +49,9 @@ export const useParticipantStore = defineStore("participant", () => {
 
     const clearParticipantInfo = () => { participant.value = null }
 
-    const fetchPersonaParticipants = async (chatId) => {
+    const fetchPersonaParticipants = async (chatId, sortRequestDto) => {
         try {
-            const response = await participantApi.getParticipantsInPersonaAnalysis(chatId)
+            const response = await participantApi.getParticipantsInPersonaAnalysis(chatId, sortRequestDto)
             const apiResponse = response.data
             personaParticipants.value = apiResponse.data
         } catch (error) {
@@ -59,9 +59,9 @@ export const useParticipantStore = defineStore("participant", () => {
         }
     }
 
-    const fetchMeetingParticipants = async (chatId) => {
+    const fetchMeetingParticipants = async (chatId, sortRequestDto) => {
         try {
-            const response = await participantApi.getParticipantsInMeetingAnalysis(chatId)
+            const response = await participantApi.getParticipantsInMeetingAnalysis(chatId, sortRequestDto)
             const apiResponse = response.data
             meetingParticipants.value = apiResponse.data
         } catch (error) {

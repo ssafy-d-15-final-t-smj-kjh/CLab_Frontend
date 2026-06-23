@@ -172,7 +172,7 @@
                             <p class="section-desc">참여자 간의 수치를 한눈에 비교해보세요.</p>
                         </div>
                         <button class="sort-btn" @click="toggleSortOrder">
-                            {{ sortOrder === 'desc' ? '⬇️ 내림차순' : '⬆️ 오름차순' }}
+                            {{ sortRequestDto.sortOrder === 'DESC' ? '⬇️ 내림차순' : '⬆️ 오름차순' }}
                         </button>
                     </div>
 
@@ -194,7 +194,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Chart, registerables } from 'chart.js'
 import { storeToRefs } from 'pinia'
@@ -229,7 +229,11 @@ const barChartRef = ref(null)
 let barChartInstance = null
 
 const activeChart = ref('count')
-const sortOrder = ref('desc') // 'desc' (내림차순) | 'asc' (오름차순)
+
+const sortRequestDto = reactive({
+    sortBy: 'default',
+    sortOrder: 'DESC'
+})
 
 const chartTabs = [
     { key: 'count', label: '💬 대화 수' },
@@ -259,26 +263,6 @@ const rankedParticipants = computed(() =>
 const maxCount = computed(() => Math.max(...personaParticipants.value.map(p => p.count), 1))
 const maxLength = computed(() => Math.max(...personaParticipants.value.map(p => p.chatLength), 1))
 const maxReply = computed(() => Math.max(...personaParticipants.value.map(p => p.averageReplyTime), 1))
-
-// 차트 정렬용 데이터 (현재 활성화된 탭과 정렬 기준에 맞춰 재정렬)
-const chartSortedParticipants = computed(() => {
-    return [...personaParticipants.value].sort((a, b) => {
-        let valA = 0, valB = 0;
-
-        switch (activeChart.value) {
-            case 'count':
-                valA = a.count; valB = b.count; break;
-            case 'reply':
-                valA = a.averageReplyTime ?? 0; valB = b.averageReplyTime ?? 0; break;
-            case 'length':
-                valA = a.chatLength; valB = b.chatLength; break;
-            case 'teto':
-                valA = a.tetoScore ?? 0; valB = b.tetoScore ?? 0; break;
-        }
-
-        return sortOrder.value === 'desc' ? valB - valA : valA - valB;
-    });
-})
 
 // ── 유틸 ────────────────────────────────────────────
 const getPercent = (val, max) => max === 0 ? 0 : Math.round((val / max) * 100)
@@ -310,7 +294,7 @@ const tetoGradient = (score) => {
 }
 
 const toggleSortOrder = () => {
-    sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc'
+    sortRequestDto.sortOrder = sortRequestDto.sortOrder === 'DESC' ? 'ASC' : 'DESC'
 }
 
 const goToChatDetail = () => router.push(`/chat/${chatId}`)
@@ -318,7 +302,7 @@ const goToParticipantDetail = (participantId) => router.push(`/chat/${chatId}/pe
 
 // ── 차트 ────────────────────────────────────────────
 const buildChartData = () => {
-    const list = chartSortedParticipants.value;
+    const list = personaParticipants.value;
     const names = list.map(p => p.name)
 
     const datasets = {
@@ -359,7 +343,7 @@ const buildChartData = () => {
     return { names, dataset: datasets[activeChart.value] }
 }
 
-async function renderChart() {
+const renderChart = async () => {
     // 탭이 차트가 아닐 때는 렌더링 시도 방지 (canvas가 없음)
     if (currentMainTab.value !== 'chart') return;
 
@@ -405,8 +389,34 @@ async function renderChart() {
     })
 }
 
-// 탭, 차트 종류, 정렬 순서가 바뀌면 다시 그리기
-watch([currentMainTab, activeChart, sortOrder], renderChart)
+watch(activeChart, (newChartType) => {
+    sortRequestDto.sortBy = newChartType
+})
+
+watch(
+    () => [sortRequestDto.sortBy, sortRequestDto.sortOrder],
+    async () => {
+        if (currentMainTab.value === 'chart') {
+            try {
+                await participantStore.fetchPersonaParticipants(chatId, sortRequestDto)
+                renderChart()
+            } catch (e) {
+                console.error("차트 정렬 데이터 로드 실패:", e)
+            }
+        }
+    }
+)
+
+watch(currentMainTab, async (newTab) => {
+    if (newTab === 'chart') {
+        try {
+            await participantStore.fetchPersonaParticipants(chatId, sortRequestDto)
+            renderChart()
+        } catch (e) {
+            console.error(e)
+        }
+    }
+})
 
 // ── API 호출 ─────────────────────────────────────────
 const fetchData = async () => {
@@ -414,7 +424,10 @@ const fetchData = async () => {
     error.value = null
     try {
         await chatStore.fetchChatInfo(chatId)
-        await participantStore.fetchPersonaParticipants(chatId)
+        await participantStore.fetchPersonaParticipants(chatId, sortRequestDto)
+        if (currentMainTab.value === 'chart') {
+            renderChart()
+        }
     } catch (e) {
         console.error('PersonaAnalysisPage.vue - fetchData :', e)
         error.value = '정보를 불러오는 데 실패하였습니다.'
