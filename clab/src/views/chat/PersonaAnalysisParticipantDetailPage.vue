@@ -1,6 +1,6 @@
 <template>
     <LoadingInfo v-if="isLoading" :is-loading="isLoading" />
-    <RetryInfo v-else-if="error" :message="error" @retry="fetchAll" />
+    <RetryInfo v-else-if="error" :message="error" @retry="fetchData" />
     <div class="detail-page" v-else>
         <!-- 헤더 -->
         <div class="page-header">
@@ -26,7 +26,6 @@
         </div>
 
         <div class="container">
-
             <!-- ── 기본 스탯 ── -->
             <div class="stats-row">
                 <div class="mini-stat">
@@ -51,6 +50,7 @@
                 </div>
             </div>
 
+            <!-- ── 페르소나 ── -->
             <div class="section card" v-if="persona">
                 <h2 class="section-title">🥸 페르소나</h2>
                 <div class="persona-grid">
@@ -137,14 +137,16 @@
                     </button>
                     <button v-for="category in categories" :key="category.id" class="filter-btn"
                         :class="{ active: selectedFilter === category.id }" @click="selectedFilter = category.id"
-                        :style="selectedFilter === category.id ? { backgroundColor: categoryColors[category.id], borderColor: categoryColors[category.id] } : {}">
+                        :style="selectedFilter === category.id ? { backgroundColor: categoryColors[category.id], borderColor: categoryColors[category.id], color: '#fff' } : {}">
                         {{ category.name }}
                     </button>
                 </div>
 
                 <div class="contents-list">
+                    <!-- 수정됨: contents 대신 필터링/페이징 처리된 filteredContents 사용 -->
                     <div v-for="content in filteredContents" :key="content.id" class="content-item"
                         @mouseenter="hoveredContentId = content.id" @mouseleave="hoveredContentId = null">
+                        
                         <!-- 말풍선 -->
                         <div class="bubble-row">
                             <div class="bubble" :class="getBubbleClass(content)">
@@ -154,11 +156,10 @@
                             <!-- 카테고리 오버레이 -->
                             <Transition name="overlay-fade">
                                 <div v-if="hoveredContentId === content.id" class="category-overlay">
-                                    <div v-for="catId in getContentCategories(content.id)" :key="catId"
-                                        class="overlay-tag" :style="{ backgroundColor: categoryColors[catId] }">
-                                        {{ getCategoryName(catId) }}
+                                    <div v-if="content.categoryId" class="overlay-tag" :style="{ backgroundColor: categoryColors[content.categoryId] }">
+                                        {{ content.categoryName }}
                                     </div>
-                                    <span v-if="!getContentCategories(content.id).length" class="overlay-empty">
+                                    <span v-else class="overlay-empty">
                                         분류 없음
                                     </span>
                                 </div>
@@ -169,10 +170,9 @@
                         <div class="content-meta">
                             <span class="content-time">{{ formatTime(content.time) }}</span>
                             <div class="category-chips">
-                                <span v-for="catId in getContentCategories(content.id)" :key="catId"
-                                    class="category-chip"
-                                    :style="{ backgroundColor: categoryColors[catId] + '30', color: categoryColors[catId] }">
-                                    {{ getCategoryName(catId) }}
+                                <span v-if="content.categoryId" class="category-chip"
+                                    :style="{ backgroundColor: categoryColors[content.categoryId] + '30', color: categoryColors[content.categoryId] }">
+                                    {{ content.categoryName }}
                                 </span>
                             </div>
                         </div>
@@ -215,10 +215,8 @@ const participantStore = useParticipantStore()
 const personaStore = usePersonaStore()
 const contentStore = useContentStore()
 const personaAnalysisStore = usePersonaAnalysisStore()
-const contentCategoryStore = useContentCategoryStore()
 const participantCategoryStore = useParticipantCategoryStore()
 const categoryStore = useCategoryStore()
-
 
 const chatId = route.params.chatId
 const participantId = route.params.participantId
@@ -227,10 +225,9 @@ const participantId = route.params.participantId
 const isLoading = ref(false)
 const error = ref(null)
 const { participant } = storeToRefs(participantStore)
+const { personaAnalysis } = storeToRefs(personaAnalysisStore)
 const { persona } = storeToRefs(personaStore)
 const { contents } = storeToRefs(contentStore)
-const { personaAnalysis } = storeToRefs(personaAnalysisStore)
-const { contentCategories } = storeToRefs(contentCategoryStore)
 const { participantCategories } = storeToRefs(participantCategoryStore)
 const { categories } = storeToRefs(categoryStore)
 
@@ -268,13 +265,14 @@ const tetoClass = computed(() => {
     return 'score-low'
 })
 
+// 더보기(Pagination) 데이터
 const pagedContents = computed(() => contents.value.slice(0, page.value * pageSize))
 
+// 선택된 카테고리 필터 적용
 const filteredContents = computed(() => {
     if (!selectedFilter.value) return pagedContents.value
-    return pagedContents.value.filter(c =>
-        getContentCategories(c.id).includes(selectedFilter.value)
-    )
+    // content.categoryId를 기준으로 필터링 하도록 수정
+    return pagedContents.value.filter(c => c.categoryId === selectedFilter.value)
 })
 
 const hasMore = computed(() => page.value * pageSize < contents.value.length)
@@ -313,12 +311,6 @@ function tetoDescription(score) {
     return '감성적이고 공감 중심의 대화 방식을 가집니다.'
 }
 
-function getContentCategories(contentId) {
-    return contentCategories.value
-        .filter(cc => cc.contentId === contentId)
-        .map(cc => cc.categoryId)
-}
-
 function getCategoryCount(catId) {
     const pc = participantCategories.value.find(p => p.categoryId === catId)
     return pc?.count ?? 0
@@ -328,15 +320,11 @@ function getCategoryPercent(catId) {
     return Math.round((getCategoryCount(catId) / maxCategoryCount.value) * 100)
 }
 
-function getCategoryName(catId) {
-    return categories.value.find(c => c.id === catId)?.name ?? ''
-}
-
-function getBubbleClass(content) {
-    const cats = getContentCategories(content.id)
-    if (!cats.length) return ''
-    // 첫 번째 카테고리 기준으로 스타일
-    return cats[0] <= 4 ? 'bubble-direct' : 'bubble-empathy'
+// 수정됨: 비동기 처리 제거 및 categoryId를 기준으로 직관적인 클래스 부여
+const getBubbleClass = (content) => {
+    if(!content.categoryId) return ''
+    // 예: 카테고리 ID가 1004 이하면 직설형(direct), 1005 이상이면 공감형(empathy)으로 나눔
+    return content.categoryId <= 1004 ? 'bubble-direct' : 'bubble-empathy'
 }
 
 function loadMore() {
@@ -348,46 +336,20 @@ const fetchData = async () => {
     isLoading.value = true
     error.value = null
     try {
-        await fetchCategories()
-        await fetchParticipantInfo()
-        await fetchContents()
-        await fetchContentCategories()
-        await fetchParticipantCategories()
-        await fetchPersonaAnalysis()
-        await fetchPersona()
+        await categoryStore.fetchCategories()
+        await participantStore.fetchParticipantInfo(participantId)
+        await contentStore.fetchContents(participantId)
+        await participantCategoryStore.fetchParticipantCategories(participantId)
+        await personaAnalysisStore.fetchPersonaAnalysis(participantId)
+        if (personaAnalysis.value?.personaId) {
+            await personaStore.fetchPersona(personaAnalysis.value.personaId)
+        }
     } catch (e) {
         console.error('PersonaAnalysisParticipantDetailPage.vue - fetchData :', e)
+        error.value = '데이터를 불러오는데 실패했습니다.' // RetryInfo 표시용
     } finally {
         isLoading.value = false
     }
-}
-const fetchParticipantInfo = async () => {
-    await participantStore.fetchParticipantInfo(participantId)
-}
-const fetchPersona = async () => {
-    if (!personaAnalysis.value.personaId) return
-    await personaStore.fetchPersona(personaAnalysis.value.personaId)
-}
-const fetchContents = async () => {
-    await contentStore.fetchContents(participantId)
-}
-const fetchPersonaAnalysis = async () => {
-    await personaAnalysisStore.fetchPersonaAnalysis(participantId)
-}
-const fetchContentCategories = async () => {
-    if (!contents.value || contents.value.length === 0) return
-
-    const fetchPromises = contents.value.map(content =>
-        contentCategoryStore.fetchContentCategories(content.id)
-    )
-
-    await Promise.all(fetchPromises)
-}
-const fetchParticipantCategories = async () => {
-    await participantCategoryStore.fetchParticipantCategories(participantId)
-}
-const fetchCategories = async () => {
-    await categoryStore.fetchCategories()
 }
 
 onMounted(fetchData)
