@@ -62,9 +62,18 @@
             </div>
 
             <ul v-else class="chat-list">
-                <li v-for="chat in chats" :key="chat.id" class="chat-card" @click="goToDetail(chat.id)">
-                    <div class="card-badge" :class="chat.category?.toLowerCase()">
+                <li v-for="chat in chats" :key="chat.id" class="chat-card" @click="handleChatClick(chat)">
+                    <div class="card-badge" style="width: 90px"; :class="chat.category?.toLowerCase()">
                         <span class="badge-category">{{ chat.category === 'EMOTION' ? '페르소나' : '회의' }}</span>
+                        <span v-if="chat.status === 'DONE'" style="margin-left: 8px; font-size: 0.8rem; color: white; white-space: nowrap;">
+                            ✅ 분석 완료
+                        </span>
+                        <span v-else-if="chat.status === 'PENDING'" style="margin-left: 8px; font-size: 0.8rem; color: white; white-space: nowrap;">
+                            ⏳ 분석 중...
+                        </span>
+                        <span v-else-if="chat.status === 'FAILED'" style="margin-left: 8px; font-size: 0.8rem; color: white; white-space: nowrap;">
+                            ❌ 분석 실패
+                        </span>
                     </div>
 
                     <div class="card-body">
@@ -188,6 +197,21 @@ const pageNumbers = computed(() => {
 
 const isLoading = ref(true)
 const error = ref(null)
+
+
+const handleChatClick = (chat) => {
+    if (chat.status === 'PENDING') {
+        alert('분석 중입니다. 잠시만 기다려주세요.');
+        return;
+    }
+    
+    if (chat.status === 'FAILED') {
+        alert('분석에 실패한 대화입니다.');
+        return;
+    }
+    
+    goToDetail(chat.id);
+};
 
 const goToDetail = (chatId) => {
     router.push(`/chat/${chatId}`)
