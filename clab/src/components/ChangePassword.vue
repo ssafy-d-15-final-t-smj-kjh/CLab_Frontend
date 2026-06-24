@@ -198,15 +198,11 @@ const submitPassword = async () => {
     isSubmitting.value = true
 
     try {
-        const data = {
-            email: userInfo.value.email,
+        const dto = {
             originPassword: form.currentPassword,
             password: form.newPassword,
-            username: userInfo.value.username,  
-            phoneNumber: userInfo.value.phoneNumber,
-            image: userInfo.value.image
         }
-        await memberApi.updateMember(data)
+        await memberApi.updateMemberPassword(dto)
         alert('비밀번호가 성공적으로 변경되었습니다.\n안전을 위해 다시 로그인해주세요.')
         await authStore.logout()
         closeModal()

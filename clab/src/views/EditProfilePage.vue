@@ -166,14 +166,11 @@ const submitInfoUpdate = async () => {
     isLoading.value = true
 
     try {
-        const formData = new FormData();
         const dto = {
             username: form.username,
             phoneNumber: form.phoneNumber,
-        };
-        formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
-
-        await memberApi.updateMember(formData)
+        }
+        await memberApi.updateMemberInfo(dto)
         await authStore.fetchUserInfo()
 
         alert('회원 정보가 성공적으로 수정되었습니다.')
@@ -234,7 +231,7 @@ const submitImageUpdate = async () => {
 
         formData.append('image', selectedFile.value);
 
-        await memberApi.updateMember(formData); 
+        await memberApi.updateMemberImage(formData); 
         await authStore.fetchUserInfo();
 
         alert('프로필 이미지가 성공적으로 수정되었습니다.');
