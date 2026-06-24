@@ -112,13 +112,13 @@
                     <span class="count-badge">{{ meetingParticipants.length }}명</span>
                 </div>
                 <button class="sort-btn" @click="toggleSort">
-                    {{ sortDesc ? '⬇️ 내림차순' : '⬆️ 오름차순' }}
+                    {{ sortRequestDto.sortOrder === 'DESC' ? '⬇️ 내림차순' : '⬆️ 오름차순' }}
                 </button>
             </div>
 
             <div class="tabs-container">
                 <button v-for="tab in metricsTabs" :key="tab.key" class="tab-btn"
-                    :class="{ 'active-tab': activeTab === tab.key }" @click="activeTab = tab.key">
+                    :class="{ 'active-tab': activeTab === tab.key }" @click="changeTabKey(tab.key)">
                     <span class="tab-icon">{{ tab.icon }}</span>
                     {{ tab.label }}
                 </button>
@@ -126,7 +126,7 @@
 
             <div class="chart-list">
                 <transition-group name="list" tag="div">
-                    <div v-for="(participant, index) in sortedParticipants" :key="participant.id" class="chart-row tooltip-container">
+                    <div v-for="(participant, index) in meetingParticipants" :key="participant.id" class="chart-row tooltip-container">
                         
                         <div class="rank-number" :class="`rank-${index + 1}`">{{ index + 1 }}</div>
 
@@ -169,7 +169,7 @@
                     </div>
                 </transition-group>
                 
-                <div v-if="sortedParticipants.length === 0" class="empty-state">
+                <div v-if="meetingParticipants.length === 0" class="empty-state">
                     분석 가능한 참여자 데이터가 없습니다.
                 </div>
             </div>
@@ -180,7 +180,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue' // 💡 watch 임포트 보완
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
@@ -205,7 +205,6 @@ const { meetingAnalysis } = storeToRefs(meetingAnalysisStore)
 
 const goToChatDetail = () => router.push(`/chat/${chatId}`)
 
-// 분석 가능한 전체 지표 목록
 const metricsTabs = [
     { key: 'count', label: '발언 횟수', icon: '🗣️', color: '#4F46E5', unit: '회' },
     { key: 'averageReplyTime', label: '평균 응답시간', icon: '⏱️', color: '#10B981', unit: '초' },
@@ -216,33 +215,24 @@ const metricsTabs = [
     { key: 'reactionReceivedScore', label: '받은 리액션', icon: '👏', color: '#14B8A6', unit: '점' }
 ];  
 
-const activeTab = ref(metricsTabs[0].key)
+const activeTab = ref('count')
 const activeTabInfo = computed(() => metricsTabs.find(tab => tab.key === activeTab.value))
 
 // ── 💡 정렬 및 데이터 요청 상태 관리 ──────────────────────────
 const sortRequestDto = reactive({
-    sortBy: metricsTabs[0].key, // 초기 지표 매핑 ('count')
+    sortBy: 'count',
     sortOrder: 'DESC',
 })
-
-// 💡 템플릿 렌더링용 연산 프로퍼티 보완
-const sortDesc = computed(() => sortRequestDto.sortOrder === 'DESC')
-
-// 백엔드가 정렬해서 넘겨준 데이터를 리스트로 그대로 출력합니다.
-const sortedParticipants = computed(() => meetingParticipants.value)
 
 const toggleSort = () => {
     sortRequestDto.sortOrder = sortRequestDto.sortOrder === 'DESC' ? 'ASC' : 'DESC'
 }
 
-// ── 💡 데이터 감시자(Watch) 세팅 ──────────────────────────────
+const changeTabKey = (key) => {
+    activeTab.value = key
+    sortRequestDto.sortBy = key
+}
 
-// 1. 활성화된 탭(activeTab)이 변경되면 DTO의 sortBy 값을 매핑합니다.
-watch(activeTab, (newTabKey) => {
-    sortRequestDto.sortBy = newTabKey
-})
-
-// 2. DTO 내부의 정렬 기준이나 차순이 바뀌면 자동으로 백엔드에 fetch 요청을 다시 날립니다.
 watch(
     () => [sortRequestDto.sortBy, sortRequestDto.sortOrder],
     async () => {
@@ -954,7 +944,7 @@ const getAvatarIndex = (id) => {
     height: 100%;
     border-radius: 999px;
     transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s;
-    min-width: 2%;
+    /* min-width: 0%; */
 }
 
 .value-display {

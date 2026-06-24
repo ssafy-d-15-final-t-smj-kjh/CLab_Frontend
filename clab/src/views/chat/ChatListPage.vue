@@ -29,17 +29,17 @@
 
                 <div class="tabs-container">
                     <button v-for="tab in tabs" :key="tab.value" class="tab-btn"
-                        :class="{ 'active': activeTab === tab.value }" @click="activeTab = tab.value">
+                        :class="{ 'active': activeTab === tab.value }" @click="changeTab(tab.value)">
                         {{ tab.label }}
                     </button>
                 </div>
 
                 <div class="sort-container">
-                    <select v-model="pageRequestDto.sortBy" @change="onSortChange" class="sort-select">
+                    <select v-model="pageRequestDto.sortBy" @change="changeSortBy" class="sort-select">
                         <option value="createdAt">시간순</option>
                         <option value="title">이름순</option>
                     </select>
-                    <select v-model="pageRequestDto.sortOrder" @change="onSortChange" class="sort-select">
+                    <select v-model="pageRequestDto.sortOrder" @change="changeSortOrder" class="sort-select">
                         <option value="DESC">내림차순</option>
                         <option value="ASC">오름차순</option>
                     </select>
@@ -87,13 +87,60 @@
                     </div>
                 </li>
             </ul>
+
+            <div v-if="chats.length > 0" class="pagination-container">
+                <button 
+                    class="page-btn ctrl-btn" 
+                    :disabled="pageRequestDto.page <= pageBlockSize" 
+                    @click="prevBlock"
+                >
+                    «
+                </button>
+                
+                <button 
+                    class="page-btn ctrl-btn" 
+                    :disabled="pageRequestDto.page === 1" 
+                    @click="changePage(pageRequestDto.page - 1)"
+                >
+                    ‹
+                </button>
+                
+                <div class="page-numbers">
+                    <button 
+                        v-for="page in pageNumbers" 
+                        :key="page"
+                        class="page-number-btn"
+                        :class="{ 'active': page === pageRequestDto.page }"
+                        @click="changePage(page)"
+                    >
+                        {{ page }}
+                    </button>
+                </div>
+
+                <button 
+                    class="page-btn ctrl-btn" 
+                    :disabled="pageRequestDto.page >= totalPages" 
+                    @click="changePage(pageRequestDto.page + 1)"
+                >
+                    ›
+                </button>
+
+                <button 
+                    class="page-btn ctrl-btn" 
+                    :disabled="Math.floor((pageRequestDto.page - 1) / pageBlockSize) === Math.floor((totalPages - 1) / pageBlockSize)" 
+                    @click="nextBlock"
+                >
+                    »
+                </button>
+            </div>
+
         </div>
     </div>
 </template>
 
 <script setup>
 import { storeToRefs } from 'pinia'
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useChatStore } from '@/stores/chat'
 
@@ -103,7 +150,48 @@ import RetryInfo from '@/components/RetryInfo.vue'
 const router = useRouter()
 const chatStore = useChatStore()
 
-// ── 날짜 포맷 ───────────────────────────────────────────────
+const { chats, totalCount } = storeToRefs(chatStore)
+
+const activeTab = ref('ALL')
+
+const tabs = [
+    { label: '전체', value: 'ALL' },
+    { label: '페르소나 분석', value: 'EMOTION' },
+    { label: '회의 분석', value: 'MEETING' }
+]
+
+const limit = ref(10)
+const pageBlockSize = 10;
+
+const totalPages = computed(() => {
+    return totalCount?.value === 0 ? 1 : Math.ceil(totalCount?.value / limit?.value);
+});
+
+const pageRequestDto = reactive({
+    page: 1,
+    size: 10,
+    sortBy: 'createdAt',
+    sortOrder: 'DESC',
+    category: 'ALL'
+})
+
+const pageNumbers = computed(() => {
+    const pages = [];
+    const startPage = Math.floor((pageRequestDto.page - 1) / pageBlockSize) * pageBlockSize + 1;
+    const endPage = Math.min(startPage + pageBlockSize - 1, totalPages.value);
+
+    for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+    }
+    return pages;
+});
+
+const isLoading = ref(true)
+const error = ref(null)
+
+const goToDetail = (chatId) => {
+    router.push(`/chat/${chatId}`)
+}
 
 const formatTime = (dateStr) => {
     if (!dateStr) return '-'
@@ -120,42 +208,54 @@ const formatTime = (dateStr) => {
     })
 }
 
-// 💡 탭 필터링 로직 추가
-// ════════════════════════════════════════════════════════════
-const activeTab = ref('ALL')
-
-const tabs = [
-    { label: '전체', value: 'ALL' },
-    { label: '페르소나 분석', value: 'EMOTION' },
-    { label: '회의 분석', value: 'MEETING' }
-]
-
-const goToDetail = (chatId) => {
-    router.push(`/chat/${chatId}`)
+const changeSortBy = () => {
+    pageRequestDto.offset = 0
+    pageRequestDto.page = 1
+    currentPage.value = 1
+    fetchChats()
 }
 
-const isLoading = ref(false)
-const error = ref(null)
+const changeSortOrder = () => {
+    pageRequestDto.offset = 0
+    pageRequestDto.page = 1
+    fetchChats()
+}
 
-const { chats } = storeToRefs(chatStore)
+const changeTab = (newValue) => {
+    activeTab.value = newValue
+    pageRequestDto.category = newValue
+    pageRequestDto.page = 1
+    fetchChats()
+}
 
-const pageRequestDto = reactive({
-    page: 1,
-    size: 10,
-    sortBy: 'createdAt',
-    sortOrder: 'DESC'
-})
-
-const onSortChange = () => {
-    pageRequestDto.offset = 0;
+const changePage = (newPage) => {
+    if (newPage < 1 || newPage > totalPages.value) return;
+    pageRequestDto.page = newPage
     fetchChats();
-}
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const prevBlock = () => {
+    const startPage = Math.floor((pageRequestDto.page - 1) / pageBlockSize) * pageBlockSize + 1;
+    if (startPage > 1) {
+        changePage(startPage - 1);
+    }
+};
+
+const nextBlock = () => {
+    const startPage = Math.floor((pageRequestDto.page - 1) / pageBlockSize) * pageBlockSize + 1;
+    const endPage = startPage + pageBlockSize - 1;
+    if (endPage < totalPages.value) {
+        changePage(endPage + 1);
+    }
+};
 
 const fetchChats = async () => {
     isLoading.value = true
     error.value = null
     try {
         await chatStore.fetchChats(pageRequestDto)
+        console.log(chats.value)
     } catch (e) {
         console.error('ChatListPage.vue - fetchChats :', e)
         error.value = '대화 내역을 불러오는 데 실패하였습니다.'
@@ -474,5 +574,80 @@ onMounted(async () => {
     .content-wrapper { padding: 16px 12px 48px; }
     .controls-container { flex-direction: column; align-items: flex-start; }
     .sort-container { width: 100%; justify-content: flex-end; }
+}
+
+.pagination-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 40px;
+    padding: 20px 0;
+    user-select: none;
+}
+
+/* 컨트롤 버튼 (<<, <, >, >>) 공통 스타일 */
+.page-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #4a5568;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-btn:hover:not(:disabled) {
+    background-color: #f7fafc;
+    border-color: #cbd5e0;
+    color: #1a202c;
+}
+
+.page-btn:disabled {
+    background-color: #f8fafc;
+    color: #cbd5e0;
+    border-color: #edf2f7;
+    cursor: not-allowed;
+}
+
+/* 숫자 버튼들을 감싸는 컨테이너 */
+.page-numbers {
+    display: flex;
+    gap: 6px;
+}
+
+/* 개별 숫자 버튼 스타일 */
+.page-number-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background-color: transparent;
+    color: #4a5568;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-number-btn:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+/* 🔥 현재 선택된 활성화 페이지 스타일 */
+.page-number-btn.active {
+    background-color: #3182ce; /* 브랜드 메인 컬러 */
+    color: #ffffff;
+    font-weight: 700;
+    border-color: #3182ce;
 }
 </style>

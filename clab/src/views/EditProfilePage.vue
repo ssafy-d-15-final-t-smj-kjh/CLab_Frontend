@@ -78,8 +78,14 @@
                             <div class="form-group">
                                 <div class="input-wrapper">
                                     <span class="input-icon">📱</span>
-                                    <input id="phoneNumber" v-model="form.phoneNumber" type="text" class="form-input"
-                                        placeholder="전화번호를 입력하세요 (예: 010-1234-5678)" :class="{ 'input-error': formErrors.phoneNumber }" />
+                                    <input id="phoneNumber" 
+                                        v-model="form.phoneNumber" 
+                                        type="text" 
+                                        class="form-input"
+                                        placeholder="전화번호를 입력하세요 (예: 010-1234-5678)" 
+                                        :class="{ 'input-error': formErrors.phoneNumber }"
+                                        maxlength="13" 
+                                        @input="filterPhoneInput" />
                                 </div>
                                 <p v-if="formErrors.phoneNumber" class="error-text">
                                     {{ formErrors.phoneNumber }}
@@ -145,11 +151,17 @@ const formErrors = reactive({
     phoneNumber: '',
 })
 
+const filterPhoneInput = (event) => {
+    const val = event.target.value
+    form.phoneNumber = val.replace(/[^0-9-]/g, '')
+}
+
 const validateForm = () => {
-    // 에러 초기화
+    // 에러 메시지 초기화
     Object.keys(formErrors).forEach(key => formErrors[key] = '')
     let isValid = true
 
+    // 이름 검증
     if (!form.username.trim()) {
         formErrors.username = '사용자 이름을 입력해주세요.'
         isValid = false
@@ -157,6 +169,28 @@ const validateForm = () => {
         formErrors.username = '사용자 이름은 2자 이상이어야 합니다.'
         isValid = false
     }
+
+    // 전화번호 검증 (하이픈과 공백을 모두 제거한 순수 숫자 형태)
+    const cleanPhoneNumber = form.phoneNumber.replace(/[- ]/g, '')
+
+    if (!cleanPhoneNumber) {
+        formErrors.phoneNumber = '전화번호를 입력해주세요.'
+        isValid = false
+    } 
+    else if (!/^\d{10,11}$/.test(cleanPhoneNumber)) {
+        formErrors.phoneNumber = '올바른 전화번호 형식(10~11자리 숫자)이 아닙니다.'
+        isValid = false
+    } 
+    else if (!cleanPhoneNumber.startsWith('01')) {
+        formErrors.phoneNumber = '유효하지 않은 휴대폰 번호 앞자리입니다.'
+        isValid = false
+    }
+
+    // 검증 성공 시 하이픈이 제거된 순수 숫자로 정제해서 폼에 반영
+    if (isValid) {
+        form.phoneNumber = cleanPhoneNumber
+    }
+
     return isValid
 }
 
