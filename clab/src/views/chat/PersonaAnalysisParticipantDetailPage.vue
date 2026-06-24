@@ -100,8 +100,15 @@
 
             <!-- ── 레이더 차트 ── -->
             <div class="section card">
-                <h2 class="section-title">🕸️ 대화 성향 분석</h2>
-                <p class="section-desc">6가지 대화 카테고리별 빈도</p>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px;">
+                    <div>
+                        <h2 class="section-title" style="margin-bottom: 4px;">🕸️ 대화 성향 분석</h2>
+                        <p class="section-desc" style="margin: 0;">6가지 대화 카테고리별 빈도</p>
+                    </div>
+                    <div style="background-color: #f1f5f9; color: #64748b; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: bold;">
+                        해당 없음 : {{ unclassifiedCount }}회
+                    </div>
+                </div>
 
                 <RadarChart :participant-name="participant?.name" :labels="chartLabels" :chart-data="chartData"
                     :colors="chartColors" />
@@ -265,6 +272,19 @@ const tetoClass = computed(() => {
     return 'score-low'
 })
 
+const unclassifiedCount = computed(() => {
+    const totalCount = participant.value?.count || 0;
+    
+    const validCategoryIds = [1001, 1002, 1003, 1004, 1005, 1006];
+    const classifiedCount = validCategoryIds.reduce((sum, id) => {
+        return sum + getCategoryCount(id);
+    }, 0);
+    
+    const count = Math.max(totalCount - classifiedCount, 0);
+    
+    return count;
+});
+
 // 더보기(Pagination) 데이터
 const pagedContents = computed(() => contents.value.slice(0, page.value * pageSize))
 
@@ -293,7 +313,7 @@ function formatReplyTime(seconds) {
 function formatTime(timeStr) {
     if (!timeStr) return ''
     const d = new Date(timeStr)
-    return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
+    return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
 }
 
 function tetoGradient(score) {
