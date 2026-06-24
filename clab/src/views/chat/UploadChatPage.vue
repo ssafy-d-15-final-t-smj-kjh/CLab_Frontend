@@ -170,7 +170,7 @@
         @confirm="executeUpload"
         @cancel="showTimeModal = false" />
 
-        <AnalysisLoading :is-loading="isLoading" :file-size="uploadedFile?.size" :estimated-seconds="estimatedSeconds"/>
+        <AnalysisLoading :is-loading="isAnalysisLoading" :file-size="uploadedFile?.size" :estimated-seconds="estimatedSeconds"/>
 
     </div>
 </template>
@@ -193,6 +193,7 @@ const { userInfo } = storeToRefs(authStore)
 
 const isLoading = ref(true)
 const error = ref(null)
+const isAnalysisLoading = ref(false)
 
 // ── 상태 ────────────────────────────────────────────────────
 const fileInput = ref(null)
@@ -319,7 +320,7 @@ const requestSubmit = () => {
 
 const executeUpload = async () => {
     showTimeModal.value = false
-    isLoading.value = true
+    isAnalysisLoading.value = true
 
     try {
         const formData = new FormData()

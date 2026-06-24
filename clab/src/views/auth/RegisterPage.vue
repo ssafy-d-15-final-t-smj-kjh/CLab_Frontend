@@ -7,23 +7,28 @@
             <form class="register-form" @submit.prevent="handleRegister">
                 <label>✉️ 이메일 (Email)</label>
                 <div class="input-box">
-                    <input type="email" v-model="email" placeholder="이메일을 입력해주세요" />
+                    <input type="email" v-model="email" placeholder="이메일을 입력해주세요" :class="{ 'input-error': errors.email }" />
                 </div>
+                <p v-if="errors.email" class="error-text">{{ errors.email }}</p>
 
                 <label>🔒 비밀번호 (Password)</label>
                 <div class="input-box">
-                    <input type="password" v-model="password" placeholder="••••••••" />
+                    <input type="password" v-model="password" placeholder="8자리 이상 입력해주세요" :class="{ 'input-error': errors.password }" />
                 </div>
+                <p v-if="errors.password" class="error-text">{{ errors.password }}</p>
 
                 <label>🦀 닉네임 (Nickname)</label>
                 <div class="input-box">
-                    <input type="text" v-model="username" placeholder="닉네임을 입력해주세요" />
+                    <input type="text" v-model="username" placeholder="닉네임을 입력해주세요" :class="{ 'input-error': errors.username }" />
                 </div>
+                <p v-if="errors.username" class="error-text">{{ errors.username }}</p>
 
                 <label>☎️ 전화번호 (Phone-Number)</label>
                 <div class="input-box">
-                    <input type="text" v-model="phoneNumber" placeholder="전화번호를 입력해주세요 010-xxxx-xxxx" />
+                    <input type="text" v-model="phoneNumber" placeholder="전화번호를 입력해주세요 010-xxxx-xxxx" 
+                           maxlength="13" @input="filterPhoneInput" :class="{ 'input-error': errors.phoneNumber }" />
                 </div>
+                <p v-if="errors.phoneNumber" class="error-text">{{ errors.phoneNumber }}</p>
                 
                 <button type="submit" class="signup-btn">계정 만들기 (Sign Up) 📝</button>
             </form>
@@ -36,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { memberApi } from '@/api/restApi'
 
@@ -47,7 +52,67 @@ const password = ref('')
 const username = ref('')
 const phoneNumber = ref('')
 
+const errors = reactive({
+    email: '',
+    password: '',
+    username: '',
+    phoneNumber: ''
+})
+
+const filterPhoneInput = (event) => {
+    phoneNumber.value = event.target.value.replace(/[^0-9-]/g, '')
+}
+
+const validateForm = () => {
+    Object.keys(errors).forEach(key => errors[key] = '')
+    let isValid = true
+
+    if (!email.value.trim()) {
+        errors.email = '이메일을 입력해주세요.'
+        isValid = false
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+        errors.email = '올바른 이메일 형식이 아닙니다.'
+        isValid = false
+    }
+
+    if (!password.value) {
+        errors.password = '비밀번호를 입력해주세요.'
+        isValid = false
+    } else if (password.value.length < 8) {
+        errors.password = '비밀번호는 최소 8자리 이상이어야 합니다.'
+        isValid = false
+    }
+
+    if (!username.value.trim()) {
+        errors.username = '닉네임을 입력해주세요.'
+        isValid = false
+    } else if (username.value.trim().length < 2) {
+        errors.username = '닉네임은 2자 이상이어야 합니다.'
+        isValid = false
+    }
+
+    const cleanPhone = phoneNumber.value.replace(/[- ]/g, '')
+    if (!cleanPhone) {
+        errors.phoneNumber = '전화번호를 입력해주세요.'
+        isValid = false
+    } else if (!/^\d{10,11}$/.test(cleanPhone)) {
+        errors.phoneNumber = '올바른 전화번호 형식(10~11자리 숫자)이 아닙니다.'
+        isValid = false
+    } else if (!cleanPhone.startsWith('01')) {
+        errors.phoneNumber = '유효하지 않은 번호 앞자리입니다.'
+        isValid = false
+    }
+
+    if (isValid) {
+        phoneNumber.value = cleanPhone
+    }
+
+    return isValid
+}
+
 const handleRegister = async () => {
+    if (!validateForm()) return
+
     try {
         const response = await memberApi.createMember({
             email: email.value,
@@ -59,7 +124,7 @@ const handleRegister = async () => {
         alert(apiResponse.data);
         router.push('/login');
     } catch (error) {
-        console.error('API 호출 에러:', error);
+        console.error('RegisterPage.vue - handleRegister :', error);
         alert('회원가입 처리에 실패했습니다. 입력 정보를 확인해주세요.');
     }
 }
@@ -128,14 +193,23 @@ const handleRegister = async () => {
     background: transparent;
 }
 
+.input-box input.input-error {
+    border-color: #ef4444;
+    background-color: #fef2f2;
+}
+
 .error-mark {
     color: var(--crab-red);
 }
 
 .error-text {
-    color: var(--crab-red);
-    font-size: 12px;
-    margin-top: 6px;
+    color: #ef4444;
+    font-size: 13px;
+    margin-top: 4px;
+    margin-bottom: 12px;
+    text-align: left;
+    padding-left: 4px;
+    font-weight: 500;
 }
 
 .signup-btn {
@@ -167,4 +241,6 @@ const handleRegister = async () => {
     font-weight: 600;
     text-decoration: none;
 }
+
+
 </style>

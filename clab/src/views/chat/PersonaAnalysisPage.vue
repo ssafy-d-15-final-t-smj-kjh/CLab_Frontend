@@ -178,7 +178,7 @@
 
                     <div class="chart-tabs">
                         <button v-for="tab in chartTabs" :key="tab.key" class="chart-tab"
-                            :class="{ active: activeChart === tab.key }" @click="activeChart = tab.key">
+                            :class="{ active: activeChart === tab.key }" @click="changeTabKey(tab.key)">
                             {{ tab.label }}
                         </button>
                     </div>
@@ -230,16 +230,11 @@ let barChartInstance = null
 
 const activeChart = ref('count')
 
-const sortRequestDto = reactive({
-    sortBy: 'default',
-    sortOrder: 'DESC'
-})
-
 const chartTabs = [
     { key: 'count', label: '💬 대화 수' },
-    { key: 'reply', label: '⏱️ 답장 시간' },
-    { key: 'length', label: '📝 대화 길이' },
-    { key: 'teto', label: '⚡ 테토 점수' },
+    { key: 'averageReplyTime', label: '⏱️ 답장 시간' },
+    { key: 'chatLength', label: '📝 대화 길이' },
+    { key: 'tetoScore', label: '⚡ 테토 점수' },
 ]
 
 const avatarColors = ['#5bb4c4', '#e8554e', '#f0d9a8', '#a8dadc', '#c41e3a', '#88bbcc']
@@ -293,9 +288,7 @@ const tetoGradient = (score) => {
     return 'linear-gradient(90deg, #a8dadc, #5bb4c4)'
 }
 
-const toggleSortOrder = () => {
-    sortRequestDto.sortOrder = sortRequestDto.sortOrder === 'DESC' ? 'ASC' : 'DESC'
-}
+
 
 const goToChatDetail = () => router.push(`/chat/${chatId}`)
 const goToParticipantDetail = (participantId) => router.push(`/chat/${chatId}/persona-analysis/participant/${participantId}`)
@@ -313,21 +306,21 @@ const buildChartData = () => {
             borderColor: '#5bb4c4',
             borderWidth: 2,
         },
-        reply: {
+        averageReplyTime: {
             label: '평균 답장 시간 (초)',
             data: list.map(p => p.averageReplyTime ?? 0),
             backgroundColor: '#a8dadc80',
             borderColor: '#a8dadc',
             borderWidth: 2,
         },
-        length: {
+        chatLength: {
             label: '대화 길이 (자)',
             data: list.map(p => p.chatLength),
             backgroundColor: '#e8554e80',
             borderColor: '#e8554e',
             borderWidth: 2,
         },
-        teto: {
+        tetoScore: {
             label: '테토 점수',
             data: list.map(p => p.tetoScore ?? 0),
             backgroundColor: list.map(p =>
@@ -389,9 +382,19 @@ const renderChart = async () => {
     })
 }
 
-watch(activeChart, (newChartType) => {
-    sortRequestDto.sortBy = newChartType
+const sortRequestDto = reactive({
+    sortBy: 'count',
+    sortOrder: 'DESC'
 })
+
+const toggleSortOrder = () => {
+    sortRequestDto.sortOrder = sortRequestDto.sortOrder === 'DESC' ? 'ASC' : 'DESC'
+}
+
+const changeTabKey = (key) => {
+    activeChart.value = key
+    sortRequestDto.sortBy = key
+}
 
 watch(
     () => [sortRequestDto.sortBy, sortRequestDto.sortOrder],

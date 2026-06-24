@@ -31,5 +31,5 @@ export const useChatStore = defineStore("chat", () => {
 
     const clearChatInfo = () => { chatInfo.value = null }
 
-    return { chats, chatInfo, fetchChats, fetchChatInfo, clearChatInfo }
+    return { chats, totalCount, chatInfo, fetchChats, fetchChatInfo, clearChatInfo }
 });
