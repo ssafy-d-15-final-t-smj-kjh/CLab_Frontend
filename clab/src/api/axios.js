@@ -4,7 +4,7 @@ import { authApi } from "./restApi"
 import { useAuthStore } from "@/stores/auth"
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080'
+    baseURL: 'https://clab-api.site'
 })
 
 const noAuthUrls = [
