@@ -2,7 +2,6 @@
     <LoadingInfo v-if="isLoading" :is-loading="isLoading" />
     <RetryInfo v-else-if="error" :message="error" @retry="fetchData" />
     <div v-else class="meeting-analysis-page">
-        <!-- Header -->
         <header class="page-header">
             <button class="back-btn" @click="goToChatDetail">
                 <span class="back-icon">←</span>
@@ -15,7 +14,6 @@
                 {{ atmosphereLabel }}
             </div>
         </header>
-        <!-- Topic & Time Card -->
         <section class="info-card primary-card">
             <div class="topic-section">
                 <div class="label-row">
@@ -42,7 +40,6 @@
             </div>
         </section>
 
-        <!-- Keywords -->
         <section class="section-card">
             <div class="section-header">
                 <span class="section-icon">🔑</span>
@@ -56,7 +53,6 @@
             </div>
         </section>
 
-        <!-- Meeting Summary -->
         <section class="section-card">
             <div class="section-header">
                 <span class="section-icon">📋</span>
@@ -67,7 +63,6 @@
             </div>
         </section>
 
-        <!-- Action Items -->
         <section class="section-card">
             <div class="section-header">
                 <span class="section-icon">✅</span>
@@ -85,7 +80,6 @@
             </div>
         </section>
 
-        <!-- Atmosphere -->
         <section class="section-card atmosphere-card">
             <div class="section-header">
                 <span class="section-icon">💬</span>
@@ -160,7 +154,6 @@
                         </div>
 
                         <div v-if="participant.keyOpinion || participant.assignedTask" class="custom-tooltip">
-                            
                             <div v-if="participant.keyOpinion" class="tooltip-section">
                                 <div class="tooltip-header opinion-color">🎯 핵심 의견</div>
                                 <div class="tooltip-content">{{ participant.keyOpinion }}</div>
@@ -172,7 +165,6 @@
                                 <div class="tooltip-header task-color">✅ 할당된 작업</div>
                                 <div class="tooltip-content">{{ participant.assignedTask }}</div>
                             </div>
-                            
                         </div>
                     </div>
                 </transition-group>
@@ -188,13 +180,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue' // 💡 watch 임포트 보완
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
 import { useParticipantStore } from '@/stores/participant'
 import { useMeetingAnalysisStore } from '@/stores/meeting-analysis'
-import { useMeetingParticipationStore } from '@/stores/meeting-participation'
 
 import LoadingInfo from '@/components/LoadingInfo.vue'
 import RetryInfo from '@/components/RetryInfo.vue'
@@ -204,52 +195,22 @@ const router = useRouter()
 
 const participantStore = useParticipantStore()
 const meetingAnalysisStore = useMeetingAnalysisStore()
-const meetingParticipationStore = useMeetingParticipationStore()
 
 const isLoading = ref(true)
 const error = ref(null)
 
 const chatId = route.params.chatId
-const { participants, meetingParticipants } = storeToRefs(participantStore)
+const { meetingParticipants } = storeToRefs(participantStore)
 const { meetingAnalysis } = storeToRefs(meetingAnalysisStore)
-const { meetingParticipations } = storeToRefs(meetingParticipationStore)
 
 const goToChatDetail = () => router.push(`/chat/${chatId}`)
 
-// ── 데이터 페칭 ──────────────────────────────────────────────
-const fetchData = async () => {
-    isLoading.value = true
-    error.value = null
-    try {
-        console.log('chatId', chatId)
-        await meetingAnalysisStore.fetchMeetingAnalysis(chatId)
-        await participantStore.fetchMeetingParticipants(chatId)
-        console.log('meetingAnalysis', meetingAnalysis)
-        console.log('meetingParticipants', meetingParticipants)
-    } catch (error) {
-        console.error('MeetingAnalysisPage.vue - fetchData', error)
-        error.value = '회의 분석 정보를 불러오는 데 실패하였습니다.'
-    } finally {
-        isLoading.value = false
-    }
-}
-onMounted(
-    () => {
-        fetchData()
-    }
-)
-
-// ── 탭 및 정렬 상태 관리 ──────────────────────────────────────
-const sortDesc = ref(true) // 기본: 내림차순
-const toggleSort = () => { sortDesc.value = !sortDesc.value }
-
-// 분석 가능한 전체 지표 목록 (두 스토어의 데이터 병합 활용)
+// 분석 가능한 전체 지표 목록
 const metricsTabs = [
     { key: 'count', label: '발언 횟수', icon: '🗣️', color: '#4F46E5', unit: '회' },
     { key: 'averageReplyTime', label: '평균 응답시간', icon: '⏱️', color: '#10B981', unit: '초' },
     { key: 'chatLength', label: '발화 길이', icon: '📏', color: '#F59E0B', unit: '자' },
     { key: 'meaningfulUtteranceCount', label: '유의미한 발화', icon: '💡', color: '#8B5CF6', unit: '회' },
-    // { key: 'keyOpinion', label: '핵심 의견', icon: '🎯', color: '#EC4899', unit: '개' },
     { key: 'participationScore', label: '참여도 점수', icon: '⭐', color: '#F59E0B', unit: '점' },
     { key: 'topicInitiationCount', label: '주제 발의', icon: '🚀', color: '#3B82F6', unit: '회' },
     { key: 'reactionReceivedScore', label: '받은 리액션', icon: '👏', color: '#14B8A6', unit: '점' }
@@ -258,19 +219,65 @@ const metricsTabs = [
 const activeTab = ref(metricsTabs[0].key)
 const activeTabInfo = computed(() => metricsTabs.find(tab => tab.key === activeTab.value))
 
+// ── 💡 정렬 및 데이터 요청 상태 관리 ──────────────────────────
+const sortRequestDto = reactive({
+    sortBy: metricsTabs[0].key, // 초기 지표 매핑 ('count')
+    sortOrder: 'DESC',
+})
+
+// 💡 템플릿 렌더링용 연산 프로퍼티 보완
+const sortDesc = computed(() => sortRequestDto.sortOrder === 'DESC')
+
+// 백엔드가 정렬해서 넘겨준 데이터를 리스트로 그대로 출력합니다.
+const sortedParticipants = computed(() => meetingParticipants.value)
+
+const toggleSort = () => {
+    sortRequestDto.sortOrder = sortRequestDto.sortOrder === 'DESC' ? 'ASC' : 'DESC'
+}
+
+// ── 💡 데이터 감시자(Watch) 세팅 ──────────────────────────────
+
+// 1. 활성화된 탭(activeTab)이 변경되면 DTO의 sortBy 값을 매핑합니다.
+watch(activeTab, (newTabKey) => {
+    sortRequestDto.sortBy = newTabKey
+})
+
+// 2. DTO 내부의 정렬 기준이나 차순이 바뀌면 자동으로 백엔드에 fetch 요청을 다시 날립니다.
+watch(
+    () => [sortRequestDto.sortBy, sortRequestDto.sortOrder],
+    async () => {
+        try {
+            await participantStore.fetchMeetingParticipants(chatId, sortRequestDto)
+        } catch (err) {
+            console.error('회의 지표 정렬 데이터 요청 실패:', err)
+        }
+    }
+)
+
+// ── 데이터 페칭 ──────────────────────────────────────────────
+const fetchData = async () => {
+    isLoading.value = true
+    error.value = null
+    try {
+        await meetingAnalysisStore.fetchMeetingAnalysis(chatId)
+        await participantStore.fetchMeetingParticipants(chatId, sortRequestDto)
+    } catch (err) {
+        console.error('MeetingAnalysisPage.vue - fetchData', err)
+        error.value = '회의 분석 정보를 불러오는 데 실패하였습니다.'
+    } finally {
+        isLoading.value = false
+    }
+}
+
+onMounted(() => {
+    fetchData()
+})
+
+// ── 기존 Computed 및 Helpers ─────────────────────────────────
 const getUnit = (key) => {
     const tab = metricsTabs.find(t => t.key === key);
     return tab ? tab.unit : '';
 };
-
-const sortedParticipants = computed(() => {
-    return [...meetingParticipants.value].sort((a, b) => {
-        const valA = a[activeTab.value] || 0
-        const valB = b[activeTab.value] || 0
-        
-        return sortDesc.value ? valB - valA : valA - valB
-    })
-})
 
 const maxValue = computed(() => {
     if (meetingParticipants.value.length === 0) return 1
@@ -282,31 +289,18 @@ const getBarWidth = (val) => {
     return ((val || 0) / maxValue.value) * 100
 }
 
-// ── 기존 Computed 및 Helpers ─────────────────────────────────
-
 const parseKeywords = (str) => {
     if (!str) return []
-    return str
-        .split(',')
-        .map((k) => k.trim())
-        .filter(Boolean)
+    return str.split(',').map((k) => k.trim()).filter(Boolean)
 }
 
 const parseActionItems = (str) => {
     if (!str) return []
-    return str
-        .split('|')
-        .map((item) => item.trim())
-        .filter(Boolean)
+    return str.split('|').map((item) => item.trim()).filter(Boolean)
 }
 
-const parsedKeywords = computed(() => {
-    return parseKeywords(meetingAnalysis.value.keywords)
-})
-
-const parsedActionItems = computed(() => {
-    return parseActionItems(meetingAnalysis.value.actionItems)
-})
+const parsedKeywords = computed(() => parseKeywords(meetingAnalysis.value.keywords))
+const parsedActionItems = computed(() => parseActionItems(meetingAnalysis.value.actionItems))
 
 const duration = computed(() => {
     if (!meetingAnalysis.value.startedAt || !meetingAnalysis.value.endedAt) return '-'
@@ -351,7 +345,6 @@ const atmosphereMeterWidth = computed(() => {
     return '50%'
 })
 
-// ── Helpers ───────────────────────────────────────────────────
 const formatDate = (iso) => {
     if (!iso) return ''
     const d = new Date(iso)
@@ -880,7 +873,7 @@ const getAvatarIndex = (id) => {
     opacity: 0;
     position: absolute;
     bottom: 100%; /* 바/이름 위쪽으로 띄움 */
-    left: 7%;
+    left: 10%;
     transform: translateX(-50%);
     margin-bottom: 8px; /* 요소와 툴팁 사이 간격 */
     background-color: #1E293B; /* 어두운 배경 */

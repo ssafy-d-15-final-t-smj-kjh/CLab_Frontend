@@ -15,7 +15,7 @@ export const memberApi = {
 }
 
 export const chatApi = {
-    getMyChats: () => api.get('/chat/me'),
+    getMyChats: (pageRequestDto) => api.get('/chat/me', { params: pageRequestDto }),
     getChatInfoById: (chatId) => api.get(`chat/${chatId}`),
     uploadChat: (formData) => api.post('/chat', formData),
     updateChat: (chatId, data) => api.patch(`/chat/${chatId}`, data),
@@ -25,8 +25,10 @@ export const chatApi = {
 export const participantApi = {
     getParticipantsInChat: (chatId) => api.get(`/participant/chat/${chatId}`),
     getParticipantInfoById: (participantId) => api.get(`/participant/${participantId}`),
-    getParticipantsInPersonaAnalysis: (chatId) => api.get(`/participant/persona/${chatId}`),
-    getParticipantsInMeetingAnalysis: (chatId) => api.get(`/participant/meeting/${chatId}`)
+    getParticipantsInPersonaAnalysis: (chatId, sortRequestDto) => 
+        api.get(`/participant/persona/${chatId}`, { params: sortRequestDto }),
+    getParticipantsInMeetingAnalysis: (chatId, sortRequestDto) => 
+        api.get(`/participant/meeting/${chatId}`, { params: sortRequestDto })
 }
 
 export const personaAnalysisApi = {
