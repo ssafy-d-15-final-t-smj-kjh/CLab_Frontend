@@ -149,7 +149,7 @@ const goToDeleteChat = async () => {
     try {
         await chatApi.deleteChat(chatId)
         alert('대화를 삭제하였습니다.')
-        router.push('/chat-list')
+        router.push('/chat')
     } catch (e) {
         console.error(e)
         error.value = e.response?.data?.message || '삭제 중 오류가 발생했습니다.'
