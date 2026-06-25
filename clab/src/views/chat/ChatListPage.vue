@@ -63,7 +63,7 @@
 
             <ul v-else class="chat-list">
                 <li v-for="chat in chats" :key="chat.id" class="chat-card" @click="handleChatClick(chat)">
-                    <div class="card-badge" style="width: 90px"; :class="chat.category?.toLowerCase()">
+                    <div class="card-badge" style="width: 90px" :class="chat.category?.toLowerCase()">
                         <span class="badge-category">{{ chat.category === 'EMOTION' ? '페르소나' : '회의' }}</span>
                         <span v-if="chat.status === 'DONE'" style="margin-left: 8px; font-size: 0.8rem; color: white; white-space: nowrap;">
                             ✅ 분석 완료
@@ -233,14 +233,11 @@ const formatTime = (dateStr) => {
 }
 
 const changeSortBy = () => {
-    pageRequestDto.offset = 0
     pageRequestDto.page = 1
-    currentPage.value = 1
     fetchChats()
 }
 
 const changeSortOrder = () => {
-    pageRequestDto.offset = 0
     pageRequestDto.page = 1
     fetchChats()
 }
