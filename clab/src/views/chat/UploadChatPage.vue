@@ -167,9 +167,14 @@
         <AnticipatedTimeModal :isVisible="showTimeModal"
         :fileSize="uploadedFile?.size || 0"
         :estimated-seconds = "estimatedSeconds"
-        @confirm="executeUpload"
+        @confirm="requestAgreement"
         @cancel="showTimeModal = false" />
 
+        <Agreement :isVisible="showAgreementModal"
+        @agreed="executeUpload"
+        @cancelled="showAgreementModal = false"
+        />
+        
         <AnalysisLoading :is-loading="isAnalysisLoading" :file-size="uploadedFile?.size" :estimated-seconds="estimatedSeconds"/>
 
     </div>
@@ -182,6 +187,7 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 
 import AnticipatedTimeModal from '@/components/AnticipatedTimeModal.vue'
+import Agreement from '@/components/Agreement.vue'
 import AnalysisLoading from '@/components/AnalysisLoading.vue'
 import LoadingInfo from '@/components/LoadingInfo.vue'
 import RetryInfo from '@/components/RetryInfo.vue'
@@ -202,6 +208,7 @@ const fileContent = ref('')
 const isDragging = ref(false)
 const selectedCategory = ref('EMOTION')   // 기본값 : 성격 분석
 const showTimeModal = ref(false)
+const showAgreementModal = ref(false)
 
 // ✨ [신규] 제목 및 내용 폼 상태 추가 ───────────────────────────
 const form = reactive({
@@ -314,12 +321,16 @@ const requestSubmit = () => {
         alert('파일을 선택해주세요.')
         return
     }
-
     showTimeModal.value = true
 }
 
-const executeUpload = async () => {
+const requestAgreement = () => {
     showTimeModal.value = false
+    showAgreementModal.value = true
+}
+
+const executeUpload = async () => {
+    showAgreementModal.value = false
     isAnalysisLoading.value = true
 
     try {
@@ -337,19 +348,17 @@ const executeUpload = async () => {
         const jsonBlob = new Blob([JSON.stringify(chatDto)], { type: 'application/json' })
         formData.append('dto', jsonBlob)
 
-        const response = await chatApi.uploadChat(formData) 
-        const apiResponse = response.data
-        const chatId = apiResponse.data.id
+        await chatApi.uploadChat(formData) 
 
         alert('업로드가 시작되었습니다! 잠시 기다려주세요...🦀')
         router.push(`/chat`)
 
     } catch (error) {
-        console.error(error)
+        console.error('UploadChatPage.vue - executeUpload : ', error)
         const msg = error.response?.data?.message || '업로드 중 오류가 발생했습니다.'
         alert(msg)
     } finally {
-        isLoading.value = false
+        isAnalysisLoading.value = false
     }
 }
 

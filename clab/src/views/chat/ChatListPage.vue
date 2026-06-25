@@ -17,7 +17,7 @@
             <div class="summary-banner">
                 <span class="summary-icon">🦀</span>
                 <span class="summary-text">
-                    총 <strong>{{ chats.length }}</strong>개의 대화가 있어요!
+                    총 <strong>{{ totalCount }}</strong>개의 대화가 있어요!
                 </span>
                 <button class="btn-upload" @click="router.push('/upload-chat')">
                     <span>📂</span>

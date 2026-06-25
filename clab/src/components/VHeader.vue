@@ -23,7 +23,8 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { useAuthStore } from '@/stores/auth' // 스토어 임포트
+import { useAuthStore } from '@/stores/auth'
+import { onMounted } from 'vue'
 
 const router = useRouter()
 const authStore = useAuthStore();
@@ -44,6 +45,18 @@ const logout = () => {
         return
     }
 }
+
+const fetchUserInfo = async () => {
+    try {
+        await authStore.fetchUserInfo()
+    } catch (e) {
+        console.log('VHeader.vue - fetchUserInfo :', e)
+    }
+}
+
+onMounted(async () => {
+    await fetchUserInfo()
+})
 </script>
 
 <style scoped>
